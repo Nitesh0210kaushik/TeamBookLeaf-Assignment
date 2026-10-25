@@ -5,7 +5,9 @@ A web application for BookLeaf Publishing's author support:
 - an **author portal** where authors see their books and royalties, raise support queries and follow replies live;
 - an **admin console** where the operations team works a prioritised queue with **AI classification, AI priority scoring and AI-drafted replies** grounded in the BookLeaf knowledge base.
 
-> **Live demo:** _add the deployed URL here_ · **API docs:** `<demo-url>/api/v1/docs`
+> **Live demo:** https://teambookleaf-assignment.onrender.com · **API docs:** https://teambookleaf-assignment.onrender.com/api/v1/docs
+>
+> Hosted on Render's free tier, so the first request after ~15 minutes of inactivity can take up to a minute while the service wakes up.
 
 ## Test credentials
 
@@ -20,7 +22,7 @@ All accounts are created by the seed script from the provided `bookleaf_sample_d
 | Author | `ananya.reddy@email.com` | `Author@123` | Never paid, ₹2,546 pending — flagged for payout review |
 | Author | `arjun.malhotra@email.com` | `Author@123` | No tickets yet (empty states) |
 
-Every author in the dataset can log in with their email and `Author@123`. The login page has one-click demo buttons.
+Every author in the dataset can log in with their email and `Author@123`.
 
 ---
 
@@ -150,7 +152,7 @@ The frontend runs on port **5173** (`DEV_SERVER_PORT` in `frontend/.env`, with `
 
 Generate a JWT secret with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
 
-**Without an `ANTHROPIC_API_KEY` the app is still fully usable.** Tickets are classified by the rule-based fallback and admins get policy-based template drafts. The admin header shows *AI off · fallback mode*.
+**Without an `ANTHROPIC_API_KEY` the app is still fully usable.** Tickets are classified by the rule-based fallback and admins get policy-based template drafts. The admin header shows *AI assist off*.
 
 Useful scripts (backend): `npm test` (unit tests), `npm run ai:smoke` (runs the brief's sample queries through triage and drafts one reply), `npm run lint`, `npm run typecheck`, `npm run build`.
 
@@ -203,7 +205,7 @@ Every call goes through `AiClientService`, which always returns a result object 
 | Repeated failures | **Circuit breaker:** after 3 consecutive provider failures, AI calls are skipped for 60s and fallbacks answer instantly. |
 | Model refusal or unusable output | `refusal` / `invalid_output` → fallback. These don't trip the circuit. |
 | Model refusal on supported models | Server-side refusal fallback (`fallbacks: "default"`) re-runs the request on Anthropic's recommended fallback model. |
-| Triage fails | The ticket is still created and gets a **rule-based** category and priority (`fallback/rule-classifier.ts`, unit-tested against every example in the brief). It is marked *Rule-based* in the UI, and the admin can re-run AI triage. |
+| Triage fails | The ticket is still created and gets a **rule-based** category and priority (`fallback/rule-classifier.ts`, unit-tested against every example in the brief). It is marked *Keyword rules* in the UI, and the admin can run AI triage again. |
 | Draft fails | The admin gets a **policy-accurate template** filled with the author's real data (amounts, threshold, next payout date, platforms). They can always just write the reply. |
 
 `npm run ai:smoke` with an invalid key shows the whole path: `auth_error` → rules → the circuit opens after 3 failures → later calls fall back in ~0 ms → template draft.
