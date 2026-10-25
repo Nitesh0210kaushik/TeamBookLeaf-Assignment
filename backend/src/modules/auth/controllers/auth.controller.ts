@@ -16,6 +16,14 @@ export const logout = catchAsync(async (_req: Request, res: Response) => {
   res.status(HTTP_STATUS.OK).json(apiResponse("Logged out.", null));
 });
 
+/** Session check for the web app: always 200, `user` is null when nobody is logged in. */
+export const getSession = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user ? await authService.getCurrentUser(req.user.id) : null;
+  res
+    .status(HTTP_STATUS.OK)
+    .json(apiResponse(user ? "Session active." : "No active session.", { user }));
+});
+
 export const getMe = catchAsync(async (req: Request, res: Response) => {
   const user = await authService.getCurrentUser(req.user!.id);
   res.status(HTTP_STATUS.OK).json(apiResponse("Current user loaded.", { user }));

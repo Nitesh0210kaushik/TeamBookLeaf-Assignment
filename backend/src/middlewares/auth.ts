@@ -69,6 +69,19 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
   }
 }
 
+/**
+ * Like requireAuth, but a missing/invalid session is not an error — `req.user` is simply left
+ * unset. Used by the session check the SPA makes on load, so logged-out visitors don't get a 401.
+ */
+export function optionalAuth(req: Request, res: Response, next: NextFunction) {
+  void requireAuth(req, res, (error?: unknown) => {
+    if (error instanceof ApiError && error.statusCode === 401) {
+      return next();
+    }
+    return next(error);
+  });
+}
+
 export function requireRoles(...roles: UserRole[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) {

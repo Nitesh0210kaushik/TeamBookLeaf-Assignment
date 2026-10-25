@@ -3,9 +3,11 @@ import { baseApi } from "./baseApi";
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    me: build.query<User, void>({
-      query: () => "/auth/me",
-      transformResponse: (response: ApiSuccess<{ user: User }>) => response.data.user,
+    // Uses the session check (200 with user: null when logged out) instead of /auth/me,
+    // so visiting the login page doesn't produce 401s in the console.
+    me: build.query<User | null, void>({
+      query: () => "/auth/session",
+      transformResponse: (response: ApiSuccess<{ user: User | null }>) => response.data.user,
       providesTags: ["Me"],
     }),
     login: build.mutation<User, { email: string; password: string }>({

@@ -284,7 +284,8 @@ Interactive **Swagger UI**: `/api/v1/docs` · raw OpenAPI 3 spec: `/api/v1/docs/
 | --- | --- | --- |
 | `POST /auth/login` | public | Email + password → session cookie and `accessToken` (rate-limited) |
 | `POST /auth/logout` | public | Clear session |
-| `GET /auth/me` | any | Current user |
+| `GET /auth/session` | public | Session check used by the SPA: always 200, `user: null` when logged out |
+| `GET /auth/me` | any | Current user (401 when not logged in) |
 | `GET /authors/me` | author | Profile, book counts, royalty summary, next payout date |
 | `GET /authors` · `GET /authors/:authorId` | admin | List authors · one author's account summary |
 | `GET /books` | any | Author: own books · Admin: all (`?authorId=`) |

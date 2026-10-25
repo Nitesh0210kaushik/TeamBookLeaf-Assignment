@@ -223,6 +223,19 @@ export const openApiSpec = {
         responses: { 200: ok("Logged out", { nullable: true }) },
       },
     },
+    "/auth/session": {
+      get: {
+        tags: ["Auth"],
+        summary: "Session check used by the web app — always 200, `user` is null when logged out",
+        security: [],
+        responses: {
+          200: ok("Session", {
+            type: "object",
+            properties: { user: { allOf: [ref("User")], nullable: true } },
+          }),
+        },
+      },
+    },
     "/auth/me": {
       get: {
         tags: ["Auth"],
