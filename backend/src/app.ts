@@ -48,17 +48,7 @@ export function createApp() {
   app.disable("x-powered-by");
   app.set("trust proxy", 1);
 
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-          // Swagger UI ships inline scripts/styles.
-          "script-src": ["'self'", "'unsafe-inline'"],
-        },
-      },
-    }),
-  );
+  app.use(helmet());
   app.use(
     cors({
       origin(origin, callback) {

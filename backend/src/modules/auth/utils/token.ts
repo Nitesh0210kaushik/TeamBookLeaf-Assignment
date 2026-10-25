@@ -2,6 +2,8 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 import { env } from "../../../config/env";
 import type { UserRole } from "../../../constants/roles";
 
+const ISSUER = "bookleaf-support-api";
+
 type AccessTokenPayload = {
   sub: string;
   role: UserRole;
@@ -9,13 +11,15 @@ type AccessTokenPayload = {
 
 export function signAccessToken(payload: AccessTokenPayload) {
   return jwt.sign(payload, env.JWT_SECRET, {
+    algorithm: "HS256",
     expiresIn: env.JWT_EXPIRES_IN as SignOptions["expiresIn"],
-    issuer: "bookleaf-support-api",
+    issuer: ISSUER,
   });
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  const decoded = jwt.verify(token, env.JWT_SECRET, { issuer: "bookleaf-support-api" });
+  // Pinning the algorithm rejects tokens that try to switch it (e.g. "none").
+  const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"], issuer: ISSUER });
   if (typeof decoded === "string" || typeof decoded.sub !== "string") {
     throw new Error("Malformed access token.");
   }
