@@ -3,6 +3,7 @@ import { env } from "../../../config/env";
 export const AI_CONFIG = {
   triage: {
     model: env.AI_TRIAGE_MODEL,
+    /** Overall deadline including SDK retries; triage runs in the background. */
     timeoutMs: env.AI_TRIAGE_TIMEOUT_MS,
     // Classification is a narrow task: low effort keeps latency and thinking tokens down.
     effort: "low" as const,
@@ -10,6 +11,7 @@ export const AI_CONFIG = {
   },
   draft: {
     model: env.AI_DRAFT_MODEL,
+    /** Overall deadline including retries — an admin is waiting on this one. */
     timeoutMs: env.AI_DRAFT_TIMEOUT_MS,
     effort: "medium" as const,
     maxTokens: 8_000,

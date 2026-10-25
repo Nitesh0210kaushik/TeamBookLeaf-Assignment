@@ -27,8 +27,8 @@ export class AiTriageService {
 
     const outcome = await aiClient.execute<TriageModelOutput>(
       "triage",
-      { ticketId, model },
-      async (client) => {
+      { ticketId, model, deadlineMs: timeoutMs },
+      async (client, requestOptions) => {
         const message = await client.beta.messages.parse(
           {
             model,
@@ -43,7 +43,7 @@ export class AiTriageService {
               ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
               : {}),
           },
-          { timeout: timeoutMs },
+          requestOptions,
         );
 
         if (message.stop_reason === "refusal") {

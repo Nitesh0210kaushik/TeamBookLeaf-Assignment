@@ -39,7 +39,7 @@ const envSchema = z
     AI_TRIAGE_MODEL: z.string().min(1).default("claude-opus-5-5"),
     AI_DRAFT_MODEL: z.string().min(1).default("claude-opus-5-5"),
     AI_TRIAGE_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
-    AI_DRAFT_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
+    AI_DRAFT_TIMEOUT_MS: z.coerce.number().int().positive().default(45_000),
     AI_CIRCUIT_FAILURE_THRESHOLD: z.coerce.number().int().positive().default(3),
     AI_CIRCUIT_COOLDOWN_MS: z.coerce.number().int().positive().default(60_000),
 

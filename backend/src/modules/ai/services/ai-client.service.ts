@@ -17,7 +17,9 @@ export class AiOutputError extends Error {
 }
 
 type ExecutorResult<T> = { value: T; model: string; usage: AiUsage };
-type Executor<T> = (client: Anthropic) => Promise<ExecutorResult<T>>;
+/** Passed straight to the SDK call: per-attempt timeout + an abort signal for the overall deadline. */
+export type AiRequestOptions = { timeout: number; signal: AbortSignal };
+type Executor<T> = (client: Anthropic, options: AiRequestOptions) => Promise<ExecutorResult<T>>;
 
 /** Failures that say "the provider is unhealthy" — these count towards opening the circuit. */
 const CIRCUIT_FAILURES = new Set<AiFailureReason>([
@@ -55,6 +57,7 @@ export function toUsage(usage: {
 function classifyError(error: unknown): AiFailureReason {
   if (error instanceof AiOutputError) return error.reason;
   // Order matters: specific subclasses before their parents.
+  if (error instanceof Anthropic.APIUserAbortError) return "timeout"; // overall deadline hit
   if (error instanceof Anthropic.APIConnectionTimeoutError) return "timeout";
   if (error instanceof Anthropic.APIConnectionError) return "provider_error";
   if (error instanceof Anthropic.RateLimitError) return "rate_limited";
@@ -98,7 +101,7 @@ export class AiClientService {
 
   async execute<T>(
     operation: AiOperation,
-    context: { ticketId: string | Types.ObjectId | null; model: string },
+    context: { ticketId: string | Types.ObjectId | null; model: string; deadlineMs: number },
     executor: Executor<T>,
   ): Promise<AiCallResult<T>> {
     if (!this.client) {
@@ -111,7 +114,12 @@ export class AiClientService {
 
     const startedAt = Date.now();
     try {
-      const result = await executor(this.client);
+      // SDK retries multiply the per-attempt timeout; the abort signal caps the total wait,
+      // so an admin never waits longer than the deadline before falling back.
+      const result = await executor(this.client, {
+        timeout: context.deadlineMs,
+        signal: AbortSignal.timeout(context.deadlineMs),
+      });
       this.consecutiveFailures = 0;
       this.recordUsage(operation, context, {
         model: result.model,
