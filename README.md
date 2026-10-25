@@ -138,10 +138,11 @@ Full interactive docs are in Swagger at `/api/v1/docs` (OpenAPI spec at `/api/v1
 | `GET /authors` · `GET /authors/:id` | admin | Authors and their account summary |
 | `GET /books` · `GET /books/:id` | any | Own books (author) or all books (admin) |
 | `GET /tickets` | any | Own tickets (author) or queue with filters: `status`, `category`, `priority`, `assignee`, `from`, `to`, `q`, `sort`, `page` |
-| `POST /tickets` | author | Raise a ticket (AI triage runs in the background) |
+| `POST /tickets` | author | Raise a ticket, `multipart/form-data` with up to 3 `attachments` (AI triage runs in the background) |
 | `GET /tickets/:id` | any | Ticket detail (admins also get notes, AI data, activity) |
 | `PATCH /tickets/:id` | admin | Status, category/priority override, assignment |
-| `POST /tickets/:id/messages` | any | Reply (admin replies are visible to the author) |
+| `POST /tickets/:id/messages` | any | Reply, optionally with attachments (admin replies are visible to the author) |
+| `GET /tickets/:id/attachments/:fileId` | any | Download a file (ticket author and admins only) |
 | `POST /tickets/:id/notes` | admin | Internal note |
 | `GET` / `POST /tickets/:id/ai-draft` | admin | Get or regenerate the AI-drafted reply |
 | `POST /tickets/:id/ai-triage` | admin | Re-run AI classification |
@@ -152,7 +153,7 @@ Full interactive docs are in Swagger at `/api/v1/docs` (OpenAPI spec at `/api/v1
 
 ## Known limitations and next steps
 
-- **Attachments are UI-only:** only file metadata is stored. Next: S3 uploads, so print-defect photos reach the team.
+- **Attachments live in MongoDB GridFS.** Files are type-checked by content, size-limited and served only to the ticket's author and admins. In production they would move to S3/R2 with presigned uploads and virus scanning.
 - **Single-instance only:** the SSE hub, circuit breaker and draft de-duplication are in memory. Scaling out needs Redis pub/sub and shared state.
 - **In-process background triage:** a job queue (e.g. BullMQ) would add retries, and could re-triage tickets that fell back to rules once the AI recovers.
 - **No evaluation set:** next is a labelled set of past tickets to measure classification and draft quality on every prompt change.
