@@ -19,7 +19,7 @@ const HEARTBEAT_MS = 25_000;
  * so role-based access control is enforced in exactly one place and nothing private is pushed.
  *
  * Note: subscribers are held in this process's memory. Running several API instances would need a
- * shared pub/sub (Redis, or MongoDB change streams) — see README "Scaling".
+ * shared pub/sub (Redis, or MongoDB change streams).
  */
 export class RealtimeService {
   private readonly subscribers = new Set<Subscriber>();

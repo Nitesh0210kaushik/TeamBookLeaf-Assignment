@@ -3,9 +3,9 @@
  *
  *   npm run ai:smoke
  *
- * Classifies the sample queries from the assignment brief and drafts one reply. With a valid
- * ANTHROPIC_API_KEY you see live model output; without one (or with the provider down) you see
- * the rule-based / template fallbacks — the same path the app takes.
+ * Classifies the sample queries from the assignment brief and drafts one reply. With a valid AI
+ * key (GROQ_API_KEY or ANTHROPIC_API_KEY) you see live model output; without one (or with the
+ * provider down) you see the rule-based / template fallbacks — the same path the app takes.
  */
 import { connectDatabase, disconnectDatabase } from "../config/database";
 import { aiClient } from "../modules/ai/services/ai-client.service";

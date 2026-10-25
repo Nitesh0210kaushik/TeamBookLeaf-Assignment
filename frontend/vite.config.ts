@@ -21,6 +21,26 @@ export default defineConfig(({ mode }) => {
         "/api": { target: env.API_PROXY_TARGET || "http://localhost:5000", changeOrigin: true },
       },
     },
+    build: {
+      rolldownOptions: {
+        output: {
+          // Long-lived vendor chunks stay cached across app deploys.
+          codeSplitting: {
+            groups: [
+              {
+                name: "react",
+                test: /node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/,
+              },
+              {
+                name: "redux",
+                test: /node_modules[\\/](@reduxjs|redux|react-redux|immer|reselect)[\\/]/,
+              },
+              { name: "vendor", test: /node_modules[\\/]/ },
+            ],
+          },
+        },
+      },
+    },
     preview: {
       port: Number(env.DEV_SERVER_PORT) || 5173,
       strictPort: true,
