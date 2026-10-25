@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
-      alias: { "@": path.resolve(__dirname, "src") },
+      alias: { "@": path.resolve(import.meta.dirname, "src") },
     },
     server: {
       port: Number(env.DEV_SERVER_PORT) || 5171,
