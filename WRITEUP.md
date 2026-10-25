@@ -15,7 +15,7 @@ Three rules shaped the design:
 - **One deployable.** The backend serves the built SPA in production, so cookies and SSE work with no CORS or proxy setup. The trade-off is that frontend and backend deploy together.
 - **Attachments are metadata-only.** This is UI-only per the brief; I spent the time on AI quality and correctness instead.
 - **Simple session auth.** A 12-hour httpOnly cookie with no refresh tokens or password reset. It is enough for this scope and is listed as a gap.
-- **Opus-class default model.** Accuracy and tone matter more than cost in author-facing replies. Models are configurable per task, and triage can move to Haiku 5.5 for roughly 40× cheaper classification.
+- **Provider-agnostic AI with a free default.** The live demo runs on Groq (gpt-oss-20b for triage, gpt-oss-120b for drafts): it costs nothing, it is fast, and strict JSON schemas keep triage output valid. The same prompts run on Claude by changing two env vars, for when reply quality matters more than cost.
 
 **How I'd take this to production.**
 
