@@ -107,7 +107,7 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
                 <Badge tone="violet" icon={<Bot className="size-3" />}>AI draft · {draft.model}</Badge>
               ) : (
                 <Badge tone="amber" icon={<FileText className="size-3" />}>
-                  Template · {AI_FALLBACK_REASONS[draft.fallbackReason ?? ""] ?? "AI unavailable"}
+                  Policy template · {AI_FALLBACK_REASONS[draft.fallbackReason ?? ""] ?? "AI unavailable"}
                 </Badge>
               )}
               {draft.knowledgeSections.length > 0 && (

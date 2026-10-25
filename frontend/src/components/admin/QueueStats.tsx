@@ -10,6 +10,7 @@ function Stat({
   hint,
   tone = "default",
   onClick,
+  className,
 }: {
   icon: ReactNode;
   label: string;
@@ -17,6 +18,7 @@ function Stat({
   hint?: string;
   tone?: "default" | "danger";
   onClick?: () => void;
+  className?: string;
 }) {
   const Tag = onClick ? "button" : "div";
   return (
@@ -27,6 +29,7 @@ function Stat({
         "rounded-xl border bg-white p-4 text-left shadow-xs transition",
         tone === "danger" ? "border-red-200" : "border-line",
         onClick && "hover:border-brand-200 hover:bg-brand-50/40",
+        className,
       )}
     >
       <div className={cn("flex items-center gap-1.5 text-xs font-medium", tone === "danger" ? "text-red-600" : "text-muted")}>
@@ -86,12 +89,13 @@ export function QueueStats({
             <span className="text-base font-normal text-muted"> / {queue.assignedToMe}</span>
           </>
         }
-        hint="Click to see unassigned"
+        hint="Unassigned · assigned to you"
         onClick={() => onFilter({ status: "open,in_progress", assignee: "unassigned", priority: null })}
       />
       <Stat
         icon={<Bot className="size-3.5" />}
         label="AI category kept by team"
+        className="col-span-2 md:col-span-1"
         value={percent(ai.categoryAgreementRate)}
         hint={
           ai.triagedByAi

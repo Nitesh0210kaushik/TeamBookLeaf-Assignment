@@ -27,19 +27,19 @@ export const STATUSES = Object.keys(STATUS_LABELS) as TicketStatus[];
 export const PRIORITIES = Object.keys(PRIORITY_LABELS) as TicketPriority[];
 export const CATEGORIES = Object.keys(CATEGORY_LABELS) as TicketCategory[];
 
-export const SOURCE_LABELS = { ai: "AI", rules: "Rules", admin: "Manual" } as const;
+export const SOURCE_LABELS = { ai: "AI", rules: "Keywords", admin: "Manual" } as const;
 
 /** Human-readable reasons shown when the AI could not be used. */
 export const AI_FALLBACK_REASONS: Record<string, string> = {
-  disabled: "AI is not configured on this server",
-  circuit_open: "AI paused after repeated provider errors",
-  rate_limited: "AI provider is rate-limiting",
-  timeout: "AI provider timed out",
-  provider_error: "AI provider error",
-  auth_error: "AI credentials rejected",
-  refusal: "AI declined this request",
-  invalid_output: "AI response was unusable",
-  seed: "Demo data (rule-based)",
+  disabled: "AI assist is turned off",
+  circuit_open: "AI assist is temporarily paused",
+  rate_limited: "AI assist is busy — try again shortly",
+  timeout: "AI assist took too long to respond",
+  provider_error: "AI assist is temporarily unavailable",
+  auth_error: "AI assist is unavailable (configuration issue)",
+  refusal: "AI assist couldn't handle this request",
+  invalid_output: "AI assist returned an unusable result",
+  seed: "Classified from keywords",
 };
 
 export const KB_SECTION_LABELS: Record<string, string> = {

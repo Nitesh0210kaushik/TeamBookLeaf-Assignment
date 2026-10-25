@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Select } from "@/components/ui/Field";
 import { EmptyState, ErrorState, PageHeader, Spinner } from "@/components/ui/States";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useFallbackPolling } from "@/hooks/useRealtime";
 import { cn } from "@/lib/cn";
 import { CATEGORIES, CATEGORY_LABELS, PRIORITIES, PRIORITY_LABELS } from "@/lib/constants";
@@ -20,7 +21,7 @@ import type { TicketListQuery } from "@/types/api";
 const STATUS_OPTIONS = [
   { value: "open,in_progress", label: "Unresolved" },
   { value: "open", label: "Open" },
-  { value: "in_progress", label: "In progress" },
+  { value: "in_progress", label: "In Progress" },
   { value: "resolved", label: "Resolved" },
   { value: "closed", label: "Closed" },
   { value: "", label: "All statuses" },
@@ -60,6 +61,7 @@ function useQueueFilters() {
 }
 
 export function QueuePage() {
+  usePageTitle("Ticket queue");
   const navigate = useNavigate();
   const pollingInterval = useFallbackPolling();
   const { query, update, reset, params } = useQueueFilters();
@@ -95,8 +97,8 @@ export function QueuePage() {
       )}
 
       <Card className="mb-4 p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-56 flex-1">
+        <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
+          <div className="relative col-span-2 md:min-w-56 md:flex-1">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={search}
@@ -106,36 +108,36 @@ export function QueuePage() {
               aria-label="Search tickets"
             />
           </div>
-          <Select className="w-auto" aria-label="Status" value={query.status ?? ""} onChange={(e) => update({ status: e.target.value })}>
+          <Select className="md:w-auto" aria-label="Status" value={query.status ?? ""} onChange={(e) => update({ status: e.target.value })}>
             {STATUS_OPTIONS.map((option) => (
               <option key={option.label} value={option.value}>{option.label}</option>
             ))}
           </Select>
-          <Select className="w-auto" aria-label="Category" value={query.category ?? ""} onChange={(e) => update({ category: e.target.value || null })}>
+          <Select className="md:w-auto" aria-label="Category" value={query.category ?? ""} onChange={(e) => update({ category: e.target.value || null })}>
             <option value="">All categories</option>
             {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
           </Select>
-          <Select className="w-auto" aria-label="Priority" value={query.priority ?? ""} onChange={(e) => update({ priority: e.target.value || null })}>
+          <Select className="md:w-auto" aria-label="Priority" value={query.priority ?? ""} onChange={(e) => update({ priority: e.target.value || null })}>
             <option value="">All priorities</option>
             <option value="critical,high">Critical + High</option>
             {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
           </Select>
-          <Select className="w-auto" aria-label="Assignee" value={query.assignee ?? ""} onChange={(e) => update({ assignee: e.target.value || null })}>
+          <Select className="md:w-auto" aria-label="Assignee" value={query.assignee ?? ""} onChange={(e) => update({ assignee: e.target.value || null })}>
             <option value="">Anyone</option>
             <option value="me">Assigned to me</option>
             <option value="unassigned">Unassigned</option>
             {team?.filter((m) => m.id !== me?.id).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
           </Select>
-          <Input type="date" className="w-auto" aria-label="Created from" value={query.from ?? ""} onChange={(e) => update({ from: e.target.value || null })} />
-          <Input type="date" className="w-auto" aria-label="Created to" value={query.to ?? ""} onChange={(e) => update({ to: e.target.value || null })} />
-          <Select className="w-auto" aria-label="Sort" value={query.sort} onChange={(e) => update({ sort: e.target.value })}>
+          <Input type="date" className="md:w-auto" aria-label="Created from" value={query.from ?? ""} onChange={(e) => update({ from: e.target.value || null })} />
+          <Input type="date" className="md:w-auto" aria-label="Created to" value={query.to ?? ""} onChange={(e) => update({ to: e.target.value || null })} />
+          <Select className="col-span-2 md:w-auto" aria-label="Sort" value={query.sort} onChange={(e) => update({ sort: e.target.value })}>
             <option value="urgency">Most urgent first</option>
             <option value="oldest">Oldest first</option>
             <option value="newest">Newest first</option>
             <option value="recent_activity">Recent activity</option>
           </Select>
           {hasFilters && (
-            <Button variant="ghost" size="sm" icon={<X className="size-3.5" />} onClick={() => { setSearch(""); reset(); }}>
+            <Button variant="ghost" size="sm" className="col-span-2" icon={<X className="size-3.5" />} onClick={() => { setSearch(""); reset(); }}>
               Clear
             </Button>
           )}
@@ -148,9 +150,42 @@ export function QueuePage() {
         ) : error || !data ? (
           <ErrorState message={getErrorMessage(error)} onRetry={refetch} />
         ) : data.tickets.length === 0 ? (
-          <EmptyState icon={<Inbox className="size-5" />} title="No tickets match" description={hasFilters ? "Try clearing some filters." : "The queue is empty — nice work."} />
+          <EmptyState icon={<Inbox className="size-5" />} title={hasFilters ? "No tickets match these filters" : "No unresolved tickets"} description={hasFilters ? "Try changing or clearing the filters." : "New tickets will appear here automatically as authors raise them."} />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Phones: one card per ticket instead of a wide table. */}
+          <ul className="divide-y divide-line md:hidden">
+            {data.tickets.map((ticket) => (
+              <li key={ticket.id}>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/tickets/${ticket.id}`)}
+                  className={cn("block w-full border-l-4 px-4 py-3 text-left transition active:bg-brand-50/60", PRIORITY_BORDER[ticket.priority])}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <PriorityBadge priority={ticket.priority} />
+                      <StatusBadge status={ticket.status} />
+                    </div>
+                    <span className={cn("inline-flex items-center gap-1 text-xs tabular-nums", ticket.slaBreached ? "font-semibold text-red-600" : "text-muted")}>
+                      {ticket.slaBreached && <AlarmClock className="size-3.5" />}
+                      {ageOf(ticket.createdAt, now)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-ink">
+                    <span className="mr-1.5 text-xs font-normal text-muted tabular-nums">#{ticket.ticketNumber}</span>
+                    {ticket.subject}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {ticket.author?.name} · {ticket.categoryLabel ?? "Classifying…"}
+                    {ticket.assignee && <> · {ticket.assignee.id === me?.id ? "You" : ticket.assignee.name}</>}
+                  </p>
+                  {ticket.awaitingSupport && <p className="mt-1 text-xs font-medium text-brand-700">● Awaiting reply</p>}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-240 text-left text-sm">
               <thead className="border-b border-line bg-slate-50 text-xs font-medium text-muted">
                 <tr>
@@ -180,7 +215,7 @@ export function QueuePage() {
                         <span className="truncate font-medium text-ink">{ticket.subject}</span>
                       </div>
                       <div className="mt-0.5 truncate text-xs text-muted">
-                        {ticket.author?.name} · {ticket.book?.title ?? "General / Account"}
+                        {ticket.author?.name} · {ticket.book?.title ?? "General / Account Level"}
                         {ticket.awaitingSupport && <span className="ml-2 font-medium text-brand-700">● Awaiting reply</span>}
                       </div>
                     </td>
@@ -212,6 +247,7 @@ export function QueuePage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {data && data.pagination.totalPages > 1 && (

@@ -12,8 +12,8 @@ function describe(event: TicketEvent) {
       return `${who} opened the ticket`;
     case "triaged": {
       const [category, priority] = (event.to ?? "").split(" / ");
-      const source = event.meta?.source === "ai" ? "AI" : "Rule-based fallback";
-      return `${source} classified as ${CATEGORY_LABELS[category as TicketCategory] ?? category} · ${PRIORITY_LABELS[priority as TicketPriority] ?? priority}`;
+      const source = event.meta?.source === "ai" ? "AI" : "Keyword rules";
+      return `${source} classified the ticket as ${CATEGORY_LABELS[category as TicketCategory] ?? category} · ${PRIORITY_LABELS[priority as TicketPriority] ?? priority}`;
     }
     case "status_changed":
       return `${who} changed status ${STATUS_LABELS[event.from as TicketStatus] ?? event.from} → ${STATUS_LABELS[event.to as TicketStatus] ?? event.to}`;

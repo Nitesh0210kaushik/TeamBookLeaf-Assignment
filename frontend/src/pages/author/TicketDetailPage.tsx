@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Textarea } from "@/components/ui/Field";
 import { ErrorState, Spinner } from "@/components/ui/States";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useFallbackPolling } from "@/hooks/useRealtime";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime, formatFileSize } from "@/lib/format";
@@ -19,6 +20,7 @@ export function TicketDetailPage() {
   const { data: ticket, isLoading, error, refetch } = useGetMyTicketQuery(ticketId, { pollingInterval });
   const [reply, { isLoading: sending }] = useReplyAsAuthorMutation();
   const [body, setBody] = useState("");
+  usePageTitle(ticket ? `#${ticket.ticketNumber} ${ticket.subject}` : "Ticket");
 
   if (isLoading) return <Spinner label="Loading ticket…" />;
   if (error || !ticket) return <ErrorState message={getErrorMessage(error, "Ticket not found.")} onRetry={refetch} />;

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Logo } from "@/components/layout/Logo";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { getErrorMessage } from "@/lib/errors";
 import { HOME_BY_ROLE } from "@/routes/RequireRole";
 import { useLoginMutation, useMeQuery } from "@/store/api/authApi";
@@ -16,16 +17,8 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-/** Seeded accounts — each one shows a different edge case from the dataset. */
-const DEMO_ACCOUNTS = [
-  { label: "Priya Sharma", hint: "Author · 2 published books, pending royalty", email: "priya.sharma@email.com", password: "Author@123" },
-  { label: "Sneha Kulkarni", hint: "Author · 3 books, one still in production", email: "sneha.kulkarni@email.com", password: "Author@123" },
-  { label: "Kavita Deshmukh", hint: "Author · pending below ₹1,000 threshold", email: "kavita.deshmukh@email.com", password: "Author@123" },
-  { label: "Arjun Malhotra", hint: "Author · never paid out, no tickets yet", email: "arjun.malhotra@email.com", password: "Author@123" },
-  { label: "Riya Mehta", hint: "Admin · BookLeaf operations team", email: "admin@bookleaf.com", password: "Admin@123" },
-];
-
 export function LoginPage() {
+  usePageTitle("Sign in");
   const navigate = useNavigate();
   const location = useLocation();
   const { data: currentUser } = useMeQuery();
@@ -33,7 +26,6 @@ export function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
@@ -93,28 +85,12 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-10">
-            <p className="text-xs font-semibold tracking-wide text-muted uppercase">Demo accounts</p>
-            <div className="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line bg-white">
-              {DEMO_ACCOUNTS.map((account) => (
-                <button
-                  key={account.email}
-                  type="button"
-                  onClick={() => {
-                    setValue("email", account.email, { shouldValidate: true });
-                    setValue("password", account.password, { shouldValidate: true });
-                  }}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left transition hover:bg-brand-50"
-                >
-                  <span>
-                    <span className="block text-sm font-medium text-ink">{account.label}</span>
-                    <span className="block text-xs text-muted">{account.hint}</span>
-                  </span>
-                  <span className="text-xs font-medium text-brand-700">Use</span>
-                </button>
-              ))}
-            </div>
-            <p className="mt-2 text-xs text-muted">Every author in the dataset can sign in with their email and <code>Author@123</code>.</p>
+          <div className="mt-8 border-t border-line pt-6 text-center text-xs leading-relaxed text-muted">
+            <p>
+              New to BookLeaf? Your author account is created by our team when you start publishing with us —
+              sign in with the email you registered with.
+            </p>
+            <p className="mt-2">Trouble signing in? Contact the BookLeaf author support team.</p>
           </div>
         </div>
       </section>

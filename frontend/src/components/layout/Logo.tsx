@@ -13,7 +13,7 @@ export function Logo({ subtitle, inverted }: { subtitle?: string; inverted?: boo
           BookLeaf
         </div>
         {subtitle && (
-          <div className={cn("text-[11px] font-medium tracking-wide uppercase", inverted ? "text-brand-100" : "text-muted")}>
+          <div className={cn("text-[11px] font-medium tracking-wide whitespace-nowrap uppercase", inverted ? "text-brand-100" : "text-muted")}>
             {subtitle}
           </div>
         )}

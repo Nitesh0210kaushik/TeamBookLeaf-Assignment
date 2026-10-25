@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { PageHeader, Spinner } from "@/components/ui/States";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { getErrorMessage, getFieldErrors } from "@/lib/errors";
 import { useGetBooksQuery } from "@/store/api/accountApi";
 import { useCreateTicketMutation } from "@/store/api/ticketsApi";
@@ -33,6 +34,7 @@ const TOPIC_PRESETS: Record<string, string> = {
 };
 
 export function NewTicketPage() {
+  usePageTitle("New query");
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { data: books, isLoading: booksLoading } = useGetBooksQuery();

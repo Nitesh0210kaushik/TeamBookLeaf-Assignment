@@ -10,6 +10,7 @@ import { PriorityBadge, StatusBadge } from "@/components/tickets/TicketBadges";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { ErrorState, Spinner } from "@/components/ui/States";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useFallbackPolling } from "@/hooks/useRealtime";
 import { getErrorMessage } from "@/lib/errors";
 import { ageOf, formatDateTime, formatFileSize } from "@/lib/format";
@@ -19,6 +20,7 @@ export function AdminTicketPage() {
   const { ticketId = "" } = useParams();
   const pollingInterval = useFallbackPolling();
   const { data: ticket, isLoading, error, refetch } = useGetAdminTicketQuery(ticketId, { pollingInterval });
+  usePageTitle(ticket ? `#${ticket.ticketNumber} ${ticket.subject}` : "Ticket");
 
   if (isLoading) return <Spinner label="Loading ticket…" />;
   if (error || !ticket) return <ErrorState message={getErrorMessage(error, "Ticket not found.")} onRetry={refetch} />;

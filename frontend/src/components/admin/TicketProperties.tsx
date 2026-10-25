@@ -126,27 +126,27 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
             ) : triage.status === "completed" ? (
               <Badge tone="violet">{triage.confidence !== null ? `${Math.round(triage.confidence * 100)}% confident` : "Done"}</Badge>
             ) : (
-              <Badge tone="amber">Rule-based</Badge>
+              <Badge tone="amber">Keyword rules</Badge>
             )}
           </div>
           {triage.reasoning && <p className="mt-2 text-xs leading-relaxed text-violet-950/80">{triage.reasoning}</p>}
-          {triage.status === "fallback" && triage.fallbackReason && (
+          {triage.status === "fallback" && triage.fallbackReason && triage.fallbackReason !== "seed" && (
             <p className="mt-1 text-xs text-amber-800">{AI_FALLBACK_REASONS[triage.fallbackReason] ?? triage.fallbackReason}</p>
           )}
           <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted">
-            <span>{triage.model ?? "No model"} · {formatDateTime(triage.completedAt)}</span>
+            <span>{triage.model ? `${triage.model} · ` : ""}{formatDateTime(triage.completedAt)}</span>
             <button
               type="button"
               disabled={triaging}
               onClick={() =>
                 rerunTriage(ticket.id)
                   .unwrap()
-                  .then(() => toast.success("Ticket re-classified"))
+                  .then(() => toast.success("Classification refreshed"))
                   .catch((error) => toast.error(getErrorMessage(error)))
               }
               className="inline-flex items-center gap-1 font-medium text-violet-700 hover:underline disabled:opacity-50"
             >
-              <RefreshCw className={triaging ? "size-3 animate-spin" : "size-3"} /> Re-run
+              <RefreshCw className={triaging ? "size-3 animate-spin" : "size-3"} /> Run AI triage
             </button>
           </div>
         </div>

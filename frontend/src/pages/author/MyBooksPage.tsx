@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { BookCard } from "@/components/books/BookCard";
 import { Card } from "@/components/ui/Card";
 import { EmptyState, ErrorState, PageHeader, Spinner } from "@/components/ui/States";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { getErrorMessage } from "@/lib/errors";
 import { firstName, formatDate, formatInr, formatNumber } from "@/lib/format";
 import { useGetBooksQuery, useGetMyAccountQuery } from "@/store/api/accountApi";
@@ -22,6 +23,7 @@ function SummaryCard({ icon, label, value, footnote }: { icon: ReactNode; label:
 }
 
 export function MyBooksPage() {
+  usePageTitle("My Books");
   const account = useGetMyAccountQuery();
   const books = useGetBooksQuery();
 
@@ -81,8 +83,8 @@ export function MyBooksPage() {
       </section>
 
       {royalty.payoutNeedsReview && (
-        <div className="mt-4 flex flex-wrap items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-start">
+          <AlertTriangle className="hidden size-4 shrink-0 sm:mt-0.5 sm:block" />
           <p className="flex-1">
             You have {formatInr(royalty.totalRoyaltyPending)} pending and it has been more than a full payout cycle
             since {royalty.lastPayoutDate ? "your last payout" : "your book was published"}. If you haven't received
@@ -90,7 +92,7 @@ export function MyBooksPage() {
           </p>
           <Link
             to="/tickets/new?topic=royalty"
-            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+            className="self-start rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white hover:bg-amber-700"
           >
             Raise a royalty query
           </Link>

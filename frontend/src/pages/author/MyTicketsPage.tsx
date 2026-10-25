@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState, ErrorState, PageHeader, Spinner } from "@/components/ui/States";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useFallbackPolling } from "@/hooks/useRealtime";
 import { cn } from "@/lib/cn";
 import { getErrorMessage } from "@/lib/errors";
@@ -19,6 +20,7 @@ const FILTERS = [
 ] as const;
 
 export function MyTicketsPage() {
+  usePageTitle("My Tickets");
   const navigate = useNavigate();
   const pollingInterval = useFallbackPolling();
   const { data, isLoading, error, refetch } = useListMyTicketsQuery(undefined, { pollingInterval });
@@ -71,7 +73,7 @@ export function MyTicketsPage() {
           </div>
 
           <Card className="divide-y divide-line overflow-hidden">
-            {tickets.length === 0 && <p className="px-5 py-10 text-center text-sm text-muted">Nothing here.</p>}
+            {tickets.length === 0 && <p className="px-5 py-10 text-center text-sm text-muted">No tickets in this view.</p>}
             {tickets.map((ticket) => (
               <Link
                 key={ticket.id}
@@ -87,7 +89,7 @@ export function MyTicketsPage() {
                     )}
                   </div>
                   <div className="mt-1 text-xs text-muted">
-                    {ticket.book?.title ?? "General / Account"}
+                    {ticket.book?.title ?? "General / Account Level"}
                     {ticket.categoryLabel && <> · {ticket.categoryLabel}</>} · updated {timeAgo(ticket.lastActivityAt)}
                   </div>
                 </div>

@@ -20,9 +20,15 @@ function AiStatusPill() {
   }
 
   return (
-    <span title={status.enabled ? "AI paused after provider errors — rule-based fallback active" : "No AI key configured — rule-based classification and template drafts"}>
+    <span
+      title={
+        status.enabled
+          ? "AI assist is paused after repeated errors and will resume automatically. Tickets are classified from keywords and replies start from policy templates meanwhile."
+          : "AI assist is turned off. Tickets are classified from keywords and replies start from policy templates."
+      }
+    >
       <Badge tone="amber" icon={<Bot className="size-3" />} className="hidden lg:inline-flex">
-        {status.enabled ? "AI paused · fallback" : "AI off · fallback mode"}
+        {status.enabled ? "AI assist paused" : "AI assist off"}
       </Badge>
     </span>
   );
