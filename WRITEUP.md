@@ -13,7 +13,7 @@ Three rules shaped the design:
 - **MongoDB + Express 3-tier modules over a heavier framework.** The structure is familiar and easy to read, with clear layering (routes → controllers → services → repositories). Tickets and conversations fit documents well. I kept relations explicit and indexed.
 - **SSE + cache invalidation over WebSockets.** Updates flow one way. Events carry only ids, and clients refetch through the REST API, so permissions are checked in one place. The cost is an in-process event hub, which is fine on one instance and needs Redis pub/sub to scale out.
 - **One deployable.** The backend serves the built SPA in production, so cookies and SSE work with no CORS or proxy setup. The trade-off is that frontend and backend deploy together.
-- **Attachments are metadata-only.** This is UI-only per the brief; I spent the time on AI quality and correctness instead.
+- **Attachments in MongoDB GridFS over object storage.** Uploads are checked by file content (not the browser's MIME type), size-limited and served only through the ticket's access check. GridFS keeps the deployment to one database; at scale, files would move to S3/R2 with presigned uploads and virus scanning.
 - **Simple session auth.** A 12-hour httpOnly cookie with no refresh tokens or password reset. It is enough for this scope and is listed as a gap.
 - **Provider-agnostic AI with a free default.** The live demo runs on Groq (gpt-oss-20b for triage, gpt-oss-120b for drafts): it costs nothing, it is fast, and strict JSON schemas keep triage output valid. The same prompts run on Claude by changing two env vars, for when reply quality matters more than cost.
 
@@ -32,7 +32,7 @@ Three rules shaped the design:
    - Connect real systems through tools: royalty statements per quarter and platform, production tracker stages, distribution sync status. Drafts could then say "your Q2 statement shows…" and actions like "trigger re-sync" become one click.
 4. **Author experience.**
    - Email and WhatsApp notifications on replies.
-   - Real file uploads, with photos of print defects going to the team (and optionally a vision model).
+   - Optionally, a vision model to pre-check photos of print defects attached to tickets.
    - Self-serve answers before a ticket is created, plus CSAT after resolution.
 5. **Operations and security.**
    - SSO for staff, refresh-token rotation, a CSRF token if the app is ever embedded cross-site, audit log export, and PII redaction before prompts.
