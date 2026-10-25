@@ -9,13 +9,14 @@
 import bcrypt from "bcryptjs";
 import fs from "node:fs";
 import path from "node:path";
+import { Types } from "mongoose";
 import { z } from "zod";
 import { connectDatabase, disconnectDatabase } from "../config/database";
 import { logger } from "../config/logger";
 import type { TicketStatus } from "../constants/ticket";
-import { classifyWithRules } from "../modules/ai/fallback/rule-classifier";
 import { AiDraftModel } from "../modules/ai/models/ai-draft.model";
 import { AiUsageLogModel } from "../modules/ai/models/ai-usage-log.model";
+import { aiTriageService } from "../modules/ai/services/ai-triage.service";
 import { UserModel } from "../modules/auth/models/user.model";
 import { AuthorModel } from "../modules/authors/models/author.model";
 import { BookModel } from "../modules/books/models/book.model";
@@ -25,6 +26,7 @@ import { TicketMessageModel } from "../modules/tickets/models/ticket-message.mod
 import { TicketNoteModel } from "../modules/tickets/models/ticket-note.model";
 import { TicketModel } from "../modules/tickets/models/ticket.model";
 import { priorityFields, statusFields } from "../modules/tickets/services/ticket-access";
+import { ticketContextService } from "../modules/tickets/services/ticket-context.service";
 
 export const DEMO_AUTHOR_PASSWORD = "Author@123";
 export const DEMO_ADMIN_PASSWORD = "Admin@123";
@@ -313,11 +315,18 @@ async function seed() {
 
   for (const demo of DEMO_TICKETS) {
     const createdAt = hoursAgo(demo.hoursAgo);
-    const rules = classifyWithRules({
-      subject: demo.subject,
-      description: demo.description,
-      book: null,
-    });
+    // Same triage path as live tickets: the configured AI model when a key is set,
+    // keyword rules otherwise — so the demo queue shows real AI output out of the box.
+    const triage = await aiTriageService.triage(
+      await ticketContextService.buildTriageInput({
+        author: new Types.ObjectId(authorIds.get(demo.authorCode)),
+        book: demo.bookCode ? new Types.ObjectId(bookIds.get(demo.bookCode)) : null,
+        subject: demo.subject,
+        description: demo.description,
+      }),
+      null,
+    );
+    const usedAi = triage.source === "ai";
     const conversation = demo.conversation ?? [];
     const adminReplies = conversation.filter(([role]) => role === "admin");
     const authorReplies = conversation.filter(([role]) => role === "author");
@@ -334,18 +343,20 @@ async function seed() {
       subject: demo.subject,
       description: demo.description,
       ...statusFields(demo.status, {}, lastActivity),
-      category: rules.category,
-      categorySource: "rules",
-      ...priorityFields(rules.priority, createdAt),
-      prioritySource: "rules",
+      category: triage.category,
+      categorySource: triage.source,
+      ...priorityFields(triage.priority, createdAt),
+      prioritySource: triage.source,
       triage: {
-        status: "fallback",
-        suggestedCategory: rules.category,
-        suggestedPriority: rules.priority,
-        confidence: rules.confidence,
-        reasoning:
-          "Classified automatically from keywords in the ticket. Run AI triage for an AI assessment.",
-        fallbackReason: "seed",
+        status: usedAi ? "completed" : "fallback",
+        suggestedCategory: triage.category,
+        suggestedPriority: triage.priority,
+        confidence: triage.confidence,
+        reasoning: usedAi
+          ? triage.reasoning
+          : "Classified automatically from keywords in the ticket. Run AI triage for an AI assessment.",
+        model: triage.model,
+        fallbackReason: usedAi ? null : "seed",
         completedAt: createdAt,
       },
       assignee: assignee?._id ?? null,
@@ -389,8 +400,8 @@ async function seed() {
         ticket: ticket._id,
         actor: null,
         type: "triaged",
-        to: `${rules.category} / ${rules.priority}`,
-        meta: { source: "rules" },
+        to: `${triage.category} / ${triage.priority}`,
+        meta: { source: triage.source, confidence: triage.confidence },
         createdAt,
       },
       ...conversation.map(([role, hours]) => ({
@@ -427,6 +438,8 @@ async function seed() {
   logger.info(`Author login: <author email from dataset> / ${DEMO_AUTHOR_PASSWORD}`);
   logger.info(`Admin login:  ${ADMINS[0].email} / ${DEMO_ADMIN_PASSWORD}`);
 
+  // AI usage logs are written fire-and-forget; let them finish before closing the connection.
+  await new Promise((resolve) => setTimeout(resolve, 1_000));
   await disconnectDatabase();
 }
 
