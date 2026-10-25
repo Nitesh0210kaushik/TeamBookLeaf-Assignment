@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+
+  /* BookLeaf blue (from the brand header) + a leaf-green accent */
+  --color-brand-50: #eef5fa;
+  --color-brand-100: #d6e7f3;
+  --color-brand-200: #aecfe6;
+  --color-brand-500: #2f74a6;
+  --color-brand-600: #24679a;
+  --color-brand-700: #1b5276;
+  --color-brand-800: #15415e;
+  --color-brand-900: #0f3047;
+  --color-leaf-50: #ecf8f1;
+  --color-leaf-500: #2f8f5b;
+  --color-leaf-600: #257549;
+
+  --color-canvas: #f5f7fa;
+  --color-ink: #101828;
+  --color-muted: #5b6474;
+  --color-line: #e3e7ee;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans text-[14px] leading-relaxed;
+  }
+  ::selection {
+    @apply bg-brand-100;
+  }
+}
+
+@layer components {
+  .field-input {
+    @apply w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink shadow-xs
+      transition outline-none placeholder:text-slate-400
+      focus:border-brand-500 focus:ring-3 focus:ring-brand-100
+      disabled:cursor-not-allowed disabled:bg-slate-50;
+  }
+  .field-input[aria-invalid="true"] {
+    @apply border-red-400 focus:ring-red-100;
+  }
+}
