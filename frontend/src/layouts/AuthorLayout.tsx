@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/Button";
 
 const NAV = [
   { to: "/books", label: "My Books", icon: <BookOpen className="size-4" /> },
-  { to: "/tickets", label: "My Tickets", icon: <MessagesSquare className="size-4" />, end: true },
+  {
+    to: "/tickets",
+    label: "My Tickets",
+    icon: <MessagesSquare className="size-4" />,
+    end: true,
+  },
 ];
 
 export function AuthorLayout() {
@@ -15,7 +20,11 @@ export function AuthorLayout() {
       subtitle="Author Portal"
       nav={NAV}
       headerExtra={
-        <Button size="sm" icon={<PenSquare className="size-3.5" />} onClick={() => navigate("/tickets/new")}>
+        <Button
+          size="sm"
+          icon={<PenSquare className="size-3.5" />}
+          onClick={() => navigate("/tickets/new")}
+        >
           <span className="hidden sm:inline">New query</span>
         </Button>
       }

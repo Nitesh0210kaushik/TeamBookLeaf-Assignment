@@ -17,7 +17,11 @@ export function formatNumber(value: number | null | undefined) {
 export function formatDate(value: string | null | undefined) {
   if (!value) return "—";
   const date = value.length === 10 ? new Date(`${value}T00:00:00`) : new Date(value);
-  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export function formatDateTime(value: string | null | undefined) {

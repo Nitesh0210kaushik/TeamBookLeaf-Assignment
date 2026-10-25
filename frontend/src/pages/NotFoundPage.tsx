@@ -13,8 +13,8 @@ export function NotFoundPage() {
         <p className="font-serif text-7xl font-semibold text-brand-700">404</p>
         <h1 className="mt-4 text-xl font-semibold text-ink">This page doesn't exist</h1>
         <p className="mt-2 max-w-sm text-sm text-muted">
-          The link may be broken or the page may have moved. Your books and tickets are safe — head back to your
-          dashboard.
+          The link may be broken or the page may have moved. Your books and tickets are safe — head
+          back to your dashboard.
         </p>
         <Link
           to="/"

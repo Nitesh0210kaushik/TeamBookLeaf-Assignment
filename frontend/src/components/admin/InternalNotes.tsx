@@ -25,7 +25,11 @@ export function InternalNotes({ ticket }: { ticket: AdminTicketDetail }) {
   return (
     <Card className="border-amber-200">
       <CardHeader
-        title={<span className="inline-flex items-center gap-1.5"><Lock className="size-3.5 text-amber-600" /> Internal notes</span>}
+        title={
+          <span className="inline-flex items-center gap-1.5">
+            <Lock className="size-3.5 text-amber-600" /> Internal notes
+          </span>
+        }
         description="Only visible to the BookLeaf team"
       />
       <div className="space-y-3 px-5 py-4">
@@ -48,7 +52,13 @@ export function InternalNotes({ ticket }: { ticket: AdminTicketDetail }) {
           aria-label="New internal note"
         />
         <div className="flex justify-end">
-          <Button size="sm" variant="secondary" onClick={submit} loading={isLoading} disabled={!body.trim()}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={submit}
+            loading={isLoading}
+            disabled={!body.trim()}
+          >
             Add note
           </Button>
         </div>

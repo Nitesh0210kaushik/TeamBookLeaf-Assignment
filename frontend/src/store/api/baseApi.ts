@@ -10,7 +10,17 @@ export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || "/api/v
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: API_BASE_URL, credentials: "include" }),
-  tagTypes: ["Me", "Account", "Books", "AuthorAccount", "TicketList", "Ticket", "Draft", "Stats", "Team"],
+  tagTypes: [
+    "Me",
+    "Account",
+    "Books",
+    "AuthorAccount",
+    "TicketList",
+    "Ticket",
+    "Draft",
+    "Stats",
+    "Team",
+  ],
   refetchOnFocus: true,
   refetchOnReconnect: true,
   endpoints: () => ({}),

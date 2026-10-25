@@ -23,7 +23,10 @@ export function StatusBadge({ status }: { status: TicketStatus }) {
 
 export function PriorityBadge({ priority }: { priority: TicketPriority }) {
   return (
-    <Badge tone={PRIORITY_TONES[priority]} icon={priority === "critical" ? <Flame className="size-3" /> : undefined}>
+    <Badge
+      tone={PRIORITY_TONES[priority]}
+      icon={priority === "critical" ? <Flame className="size-3" /> : undefined}
+    >
       {PRIORITY_LABELS[priority]}
     </Badge>
   );

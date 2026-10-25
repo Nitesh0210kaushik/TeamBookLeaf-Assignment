@@ -22,7 +22,9 @@ function describe(event: TicketEvent) {
     case "category_changed":
       return `${who} changed category to ${event.to}`;
     case "assigned":
-      return event.to === "Unassigned" ? `${who} unassigned the ticket` : `${who} assigned to ${event.to}`;
+      return event.to === "Unassigned"
+        ? `${who} unassigned the ticket`
+        : `${who} assigned to ${event.to}`;
     case "admin_replied":
       return `${who} replied${event.meta?.aiAssisted ? " (from AI draft)" : ""}`;
     case "author_replied":

@@ -14,8 +14,16 @@ import { timeAgo } from "@/lib/format";
 import { useListMyTicketsQuery } from "@/store/api/ticketsApi";
 
 const FILTERS = [
-  { key: "active", label: "Active", match: (s: string) => s === "open" || s === "in_progress" },
-  { key: "done", label: "Resolved & closed", match: (s: string) => s === "resolved" || s === "closed" },
+  {
+    key: "active",
+    label: "Active",
+    match: (s: string) => s === "open" || s === "in_progress",
+  },
+  {
+    key: "done",
+    label: "Resolved & closed",
+    match: (s: string) => s === "resolved" || s === "closed",
+  },
   { key: "all", label: "All", match: () => true },
 ] as const;
 
@@ -23,7 +31,9 @@ export function MyTicketsPage() {
   usePageTitle("My Tickets");
   const navigate = useNavigate();
   const pollingInterval = useFallbackPolling();
-  const { data, isLoading, error, refetch } = useListMyTicketsQuery(undefined, { pollingInterval });
+  const { data, isLoading, error, refetch } = useListMyTicketsQuery(undefined, {
+    pollingInterval,
+  });
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
 
   if (isLoading) return <Spinner label="Loading your tickets…" />;
@@ -50,12 +60,14 @@ export function MyTicketsPage() {
             icon={<MessagesSquare className="size-5" />}
             title="No tickets yet"
             description="Questions about royalties, your ISBN, print quality or where your book is in production? We're here to help."
-            action={<Button onClick={() => navigate("/tickets/new")}>Raise your first query</Button>}
+            action={
+              <Button onClick={() => navigate("/tickets/new")}>Raise your first query</Button>
+            }
           />
         </Card>
       ) : (
         <>
-          <div className="mb-4 flex gap-1 rounded-lg bg-white p-1 ring-1 ring-line w-fit">
+          <div className="mb-4 flex w-fit gap-1 rounded-lg bg-white p-1 ring-1 ring-line">
             {FILTERS.map((f) => (
               <button
                 key={f.key}
@@ -67,13 +79,17 @@ export function MyTicketsPage() {
                 )}
               >
                 {f.label}
-                <span className="ml-1.5 text-xs opacity-75">{data.tickets.filter((t) => f.match(t.status)).length}</span>
+                <span className="ml-1.5 text-xs opacity-75">
+                  {data.tickets.filter((t) => f.match(t.status)).length}
+                </span>
               </button>
             ))}
           </div>
 
           <Card className="divide-y divide-line overflow-hidden">
-            {tickets.length === 0 && <p className="px-5 py-10 text-center text-sm text-muted">No tickets in this view.</p>}
+            {tickets.length === 0 && (
+              <p className="px-5 py-10 text-center text-sm text-muted">No tickets in this view.</p>
+            )}
             {tickets.map((ticket) => (
               <Link
                 key={ticket.id}
@@ -82,15 +98,22 @@ export function MyTicketsPage() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-medium text-muted tabular-nums">#{ticket.ticketNumber}</span>
-                    <span className="truncate text-sm font-semibold text-ink">{ticket.subject}</span>
+                    <span className="text-xs font-medium text-muted tabular-nums">
+                      #{ticket.ticketNumber}
+                    </span>
+                    <span className="truncate text-sm font-semibold text-ink">
+                      {ticket.subject}
+                    </span>
                     {ticket.hasSupportReply && ticket.status !== "closed" && (
-                      <Badge tone="brand" icon={<MessageCircleReply className="size-3" />}>Support replied</Badge>
+                      <Badge tone="brand" icon={<MessageCircleReply className="size-3" />}>
+                        Support replied
+                      </Badge>
                     )}
                   </div>
                   <div className="mt-1 text-xs text-muted">
                     {ticket.book?.title ?? "General / Account Level"}
-                    {ticket.categoryLabel && <> · {ticket.categoryLabel}</>} · updated {timeAgo(ticket.lastActivityAt)}
+                    {ticket.categoryLabel && <> · {ticket.categoryLabel}</>} · updated{" "}
+                    {timeAgo(ticket.lastActivityAt)}
                   </div>
                 </div>
                 <StatusBadge status={ticket.status} />

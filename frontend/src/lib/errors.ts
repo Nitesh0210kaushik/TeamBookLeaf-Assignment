@@ -6,11 +6,15 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
 }
 
 /** Turns any RTK Query error into a message a user can act on. */
-export function getErrorMessage(error: unknown, fallback = "Something went wrong. Please try again.") {
+export function getErrorMessage(
+  error: unknown,
+  fallback = "Something went wrong. Please try again.",
+) {
   const fetchError = error as FetchBaseQueryError | undefined;
   if (fetchError && "status" in fetchError) {
     if (isApiErrorBody(fetchError.data)) return fetchError.data.error.message;
-    if (fetchError.status === "FETCH_ERROR") return "Can't reach the server. Check your connection.";
+    if (fetchError.status === "FETCH_ERROR")
+      return "Can't reach the server. Check your connection.";
   }
   return fallback;
 }

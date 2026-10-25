@@ -11,7 +11,14 @@ function Stat({ label, value, emphasis }: { label: string; value: string; emphas
   return (
     <div>
       <dt className="text-xs text-muted">{label}</dt>
-      <dd className={cn("mt-0.5 text-sm font-semibold tabular-nums", emphasis ? "text-brand-700" : "text-ink")}>{value}</dd>
+      <dd
+        className={cn(
+          "mt-0.5 text-sm font-semibold tabular-nums",
+          emphasis ? "text-brand-700" : "text-ink",
+        )}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
@@ -30,7 +37,12 @@ function ProductionProgress({ stageIndex, stage }: { stageIndex: number | null; 
     <div className="mt-5">
       <p className="text-sm text-ink">
         Currently in <span className="font-semibold">{stage}</span>
-        {stageIndex && <span className="text-muted"> · stage {stageIndex} of {PRODUCTION_STAGES.length}</span>}
+        {stageIndex && (
+          <span className="text-muted">
+            {" "}
+            · stage {stageIndex} of {PRODUCTION_STAGES.length}
+          </span>
+        )}
       </p>
       <ol className="mt-3 flex items-center gap-1" aria-label="Production progress">
         {PRODUCTION_STAGES.map((name, index) => {
@@ -50,7 +62,8 @@ function ProductionProgress({ stageIndex, stage }: { stageIndex: number | null; 
         })}
       </ol>
       <p className="mt-3 text-xs text-muted">
-        You'll get an email at every stage. Sales and royalties appear here once the book is published.
+        You'll get an email at every stage. Sales and royalties appear here once the book is
+        published.
       </p>
     </div>
   );
@@ -67,7 +80,9 @@ export function BookCard({ book }: { book: Book }) {
           <p className="text-sm text-muted">{book.genre ?? "—"}</p>
         </div>
         {published ? (
-          <Badge tone="green" icon={<Check className="size-3" />}>Published & Live</Badge>
+          <Badge tone="green" icon={<Check className="size-3" />}>
+            Published & Live
+          </Badge>
         ) : (
           <Badge tone="amber">In production</Badge>
         )}
@@ -86,19 +101,27 @@ export function BookCard({ book }: { book: Book }) {
             <Stat label="Copies sold" value={formatNumber(book.totalCopiesSold)} />
             <Stat label="Royalty earned" value={formatInr(book.totalRoyaltyEarned)} />
             <Stat label="Royalty paid" value={formatInr(book.royaltyPaid)} />
-            <Stat label="Royalty pending" value={formatInr(book.royaltyPending)} emphasis={book.royaltyPending > 0} />
+            <Stat
+              label="Royalty pending"
+              value={formatInr(book.royaltyPending)}
+              emphasis={book.royaltyPending > 0}
+            />
           </dl>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
             <span>
               Last payout:{" "}
               <span className="font-medium text-ink">
-                {book.lastRoyaltyPayoutDate ? formatDate(book.lastRoyaltyPayoutDate) : "No payout yet"}
+                {book.lastRoyaltyPayoutDate
+                  ? formatDate(book.lastRoyaltyPayoutDate)
+                  : "No payout yet"}
               </span>
             </span>
             <span className="flex flex-wrap items-center gap-1.5">
               Available on:
               {book.availableOn.map((platform) => (
-                <Badge key={platform} tone="brand">{platform}</Badge>
+                <Badge key={platform} tone="brand">
+                  {platform}
+                </Badge>
               ))}
             </span>
           </div>

@@ -32,11 +32,23 @@ function Stat({
         className,
       )}
     >
-      <div className={cn("flex items-center gap-1.5 text-xs font-medium", tone === "danger" ? "text-red-600" : "text-muted")}>
+      <div
+        className={cn(
+          "flex items-center gap-1.5 text-xs font-medium",
+          tone === "danger" ? "text-red-600" : "text-muted",
+        )}
+      >
         {icon}
         {label}
       </div>
-      <div className={cn("mt-1.5 text-2xl font-semibold tabular-nums", tone === "danger" ? "text-red-600" : "text-ink")}>{value}</div>
+      <div
+        className={cn(
+          "mt-1.5 text-2xl font-semibold tabular-nums",
+          tone === "danger" ? "text-red-600" : "text-ink",
+        )}
+      >
+        {value}
+      </div>
       {hint && <div className="mt-0.5 text-xs text-muted">{hint}</div>}
     </Tag>
   );
@@ -63,7 +75,13 @@ export function QueueStats({
         label="Open tickets"
         value={open}
         hint={`${queue.byStatus.open ?? 0} new · ${queue.byStatus.in_progress ?? 0} in progress`}
-        onClick={() => onFilter({ status: "open,in_progress", priority: null, assignee: null })}
+        onClick={() =>
+          onFilter({
+            status: "open,in_progress",
+            priority: null,
+            assignee: null,
+          })
+        }
       />
       <Stat
         icon={<Flame className="size-3.5" />}
@@ -71,7 +89,13 @@ export function QueueStats({
         value={urgent}
         hint={`${queue.openByPriority.critical ?? 0} critical`}
         tone={queue.openByPriority.critical ? "danger" : "default"}
-        onClick={() => onFilter({ status: "open,in_progress", priority: "critical,high", assignee: null })}
+        onClick={() =>
+          onFilter({
+            status: "open,in_progress",
+            priority: "critical,high",
+            assignee: null,
+          })
+        }
       />
       <Stat
         icon={<AlarmClock className="size-3.5" />}
@@ -90,7 +114,13 @@ export function QueueStats({
           </>
         }
         hint="Unassigned · assigned to you"
-        onClick={() => onFilter({ status: "open,in_progress", assignee: "unassigned", priority: null })}
+        onClick={() =>
+          onFilter({
+            status: "open,in_progress",
+            assignee: "unassigned",
+            priority: null,
+          })
+        }
       />
       <Stat
         icon={<Bot className="size-3.5" />}

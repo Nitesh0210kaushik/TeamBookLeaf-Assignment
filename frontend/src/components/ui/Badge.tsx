@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-export type BadgeTone = "slate" | "blue" | "violet" | "green" | "amber" | "orange" | "red" | "brand";
+export type BadgeTone =
+  "slate" | "blue" | "violet" | "green" | "amber" | "orange" | "red" | "brand";
 
 const TONES: Record<BadgeTone, string> = {
   slate: "bg-slate-100 text-slate-700 ring-slate-200",

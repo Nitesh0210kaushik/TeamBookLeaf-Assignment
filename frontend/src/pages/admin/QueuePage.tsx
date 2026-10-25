@@ -2,7 +2,12 @@ import { AlarmClock, ChevronLeft, ChevronRight, Inbox, Loader2, Search, X } from
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { QueueStats } from "@/components/admin/QueueStats";
-import { PRIORITY_BORDER, PriorityBadge, SourceTag, StatusBadge } from "@/components/tickets/TicketBadges";
+import {
+  PRIORITY_BORDER,
+  PriorityBadge,
+  SourceTag,
+  StatusBadge,
+} from "@/components/tickets/TicketBadges";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Select } from "@/components/ui/Field";
@@ -57,7 +62,12 @@ function useQueueFilters() {
     setParams(next, { replace: true });
   };
 
-  return { query, update, reset: () => setParams(new URLSearchParams(), { replace: true }), params };
+  return {
+    query,
+    update,
+    reset: () => setParams(new URLSearchParams(), { replace: true }),
+    params,
+  };
 }
 
 export function QueuePage() {
@@ -68,7 +78,9 @@ export function QueuePage() {
   const { data: me } = useMeQuery();
   const { data: team } = useGetTeamQuery();
   const { data: stats } = useGetStatsQuery(undefined, { pollingInterval });
-  const { data, isLoading, isFetching, error, refetch } = useListQueueQuery(query, { pollingInterval });
+  const { data, isLoading, isFetching, error, refetch } = useListQueueQuery(query, {
+    pollingInterval,
+  });
 
   const [search, setSearch] = useState(query.q ?? "");
   useEffect(() => {
@@ -87,7 +99,9 @@ export function QueuePage() {
       <PageHeader
         title="Ticket queue"
         description="Unresolved tickets first, most urgent and oldest at the top."
-        actions={isFetching && !isLoading ? <Loader2 className="size-4 animate-spin text-muted" /> : null}
+        actions={
+          isFetching && !isLoading ? <Loader2 className="size-4 animate-spin text-muted" /> : null
+        }
       />
 
       {stats && (
@@ -108,36 +122,98 @@ export function QueuePage() {
               aria-label="Search tickets"
             />
           </div>
-          <Select className="md:w-auto" aria-label="Status" value={query.status ?? ""} onChange={(e) => update({ status: e.target.value })}>
+          <Select
+            className="md:w-auto"
+            aria-label="Status"
+            value={query.status ?? ""}
+            onChange={(e) => update({ status: e.target.value })}
+          >
             {STATUS_OPTIONS.map((option) => (
-              <option key={option.label} value={option.value}>{option.label}</option>
+              <option key={option.label} value={option.value}>
+                {option.label}
+              </option>
             ))}
           </Select>
-          <Select className="md:w-auto" aria-label="Category" value={query.category ?? ""} onChange={(e) => update({ category: e.target.value || null })}>
+          <Select
+            className="md:w-auto"
+            aria-label="Category"
+            value={query.category ?? ""}
+            onChange={(e) => update({ category: e.target.value || null })}
+          >
             <option value="">All categories</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {CATEGORY_LABELS[c]}
+              </option>
+            ))}
           </Select>
-          <Select className="md:w-auto" aria-label="Priority" value={query.priority ?? ""} onChange={(e) => update({ priority: e.target.value || null })}>
+          <Select
+            className="md:w-auto"
+            aria-label="Priority"
+            value={query.priority ?? ""}
+            onChange={(e) => update({ priority: e.target.value || null })}
+          >
             <option value="">All priorities</option>
             <option value="critical,high">Critical + High</option>
-            {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
+            {PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {PRIORITY_LABELS[p]}
+              </option>
+            ))}
           </Select>
-          <Select className="md:w-auto" aria-label="Assignee" value={query.assignee ?? ""} onChange={(e) => update({ assignee: e.target.value || null })}>
+          <Select
+            className="md:w-auto"
+            aria-label="Assignee"
+            value={query.assignee ?? ""}
+            onChange={(e) => update({ assignee: e.target.value || null })}
+          >
             <option value="">Anyone</option>
             <option value="me">Assigned to me</option>
             <option value="unassigned">Unassigned</option>
-            {team?.filter((m) => m.id !== me?.id).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            {team
+              ?.filter((m) => m.id !== me?.id)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
           </Select>
-          <Input type="date" className="md:w-auto" aria-label="Created from" value={query.from ?? ""} onChange={(e) => update({ from: e.target.value || null })} />
-          <Input type="date" className="md:w-auto" aria-label="Created to" value={query.to ?? ""} onChange={(e) => update({ to: e.target.value || null })} />
-          <Select className="col-span-2 md:w-auto" aria-label="Sort" value={query.sort} onChange={(e) => update({ sort: e.target.value })}>
+          <Input
+            type="date"
+            className="md:w-auto"
+            aria-label="Created from"
+            value={query.from ?? ""}
+            onChange={(e) => update({ from: e.target.value || null })}
+          />
+          <Input
+            type="date"
+            className="md:w-auto"
+            aria-label="Created to"
+            value={query.to ?? ""}
+            onChange={(e) => update({ to: e.target.value || null })}
+          />
+          <Select
+            className="col-span-2 md:w-auto"
+            aria-label="Sort"
+            value={query.sort}
+            onChange={(e) => update({ sort: e.target.value })}
+          >
             <option value="urgency">Most urgent first</option>
             <option value="oldest">Oldest first</option>
             <option value="newest">Newest first</option>
             <option value="recent_activity">Recent activity</option>
           </Select>
           {hasFilters && (
-            <Button variant="ghost" size="sm" className="col-span-2" icon={<X className="size-3.5" />} onClick={() => { setSearch(""); reset(); }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="col-span-2"
+              icon={<X className="size-3.5" />}
+              onClick={() => {
+                setSearch("");
+                reset();
+              }}
+            >
               Clear
             </Button>
           )}
@@ -150,116 +226,179 @@ export function QueuePage() {
         ) : error || !data ? (
           <ErrorState message={getErrorMessage(error)} onRetry={refetch} />
         ) : data.tickets.length === 0 ? (
-          <EmptyState icon={<Inbox className="size-5" />} title={hasFilters ? "No tickets match these filters" : "No unresolved tickets"} description={hasFilters ? "Try changing or clearing the filters." : "New tickets will appear here automatically as authors raise them."} />
+          <EmptyState
+            icon={<Inbox className="size-5" />}
+            title={hasFilters ? "No tickets match these filters" : "No unresolved tickets"}
+            description={
+              hasFilters
+                ? "Try changing or clearing the filters."
+                : "New tickets will appear here automatically as authors raise them."
+            }
+          />
         ) : (
           <>
-          {/* Phones: one card per ticket instead of a wide table. */}
-          <ul className="divide-y divide-line md:hidden">
-            {data.tickets.map((ticket) => (
-              <li key={ticket.id}>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/admin/tickets/${ticket.id}`)}
-                  className={cn("block w-full border-l-4 px-4 py-3 text-left transition active:bg-brand-50/60", PRIORITY_BORDER[ticket.priority])}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <PriorityBadge priority={ticket.priority} />
-                      <StatusBadge status={ticket.status} />
-                    </div>
-                    <span className={cn("inline-flex items-center gap-1 text-xs tabular-nums", ticket.slaBreached ? "font-semibold text-red-600" : "text-muted")}>
-                      {ticket.slaBreached && <AlarmClock className="size-3.5" />}
-                      {ageOf(ticket.createdAt, now)}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-ink">
-                    <span className="mr-1.5 text-xs font-normal text-muted tabular-nums">#{ticket.ticketNumber}</span>
-                    {ticket.subject}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {ticket.author?.name} · {ticket.categoryLabel ?? "Classifying…"}
-                    {ticket.assignee && <> · {ticket.assignee.id === me?.id ? "You" : ticket.assignee.name}</>}
-                  </p>
-                  {ticket.awaitingSupport && <p className="mt-1 text-xs font-medium text-brand-700">● Awaiting reply</p>}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-240 text-left text-sm">
-              <thead className="border-b border-line bg-slate-50 text-xs font-medium text-muted">
-                <tr>
-                  <th className="px-4 py-2.5">Priority</th>
-                  <th className="px-4 py-2.5">Ticket</th>
-                  <th className="px-4 py-2.5">Category</th>
-                  <th className="px-4 py-2.5">Status</th>
-                  <th className="px-4 py-2.5">Assignee</th>
-                  <th className="px-4 py-2.5">Age</th>
-                  <th className="px-4 py-2.5">Last activity</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {data.tickets.map((ticket) => (
-                  <tr
-                    key={ticket.id}
+            {/* Phones: one card per ticket instead of a wide table. */}
+            <ul className="divide-y divide-line md:hidden">
+              {data.tickets.map((ticket) => (
+                <li key={ticket.id}>
+                  <button
+                    type="button"
                     onClick={() => navigate(`/admin/tickets/${ticket.id}`)}
-                    className={cn("cursor-pointer border-l-4 transition hover:bg-brand-50/40", PRIORITY_BORDER[ticket.priority])}
+                    className={cn(
+                      "block w-full border-l-4 px-4 py-3 text-left transition active:bg-brand-50/60",
+                      PRIORITY_BORDER[ticket.priority],
+                    )}
                   >
-                    <td className="px-4 py-3 align-top">
-                      <PriorityBadge priority={ticket.priority} />
-                      <div className="mt-1"><SourceTag source={ticket.prioritySource} /></div>
-                    </td>
-                    <td className="max-w-md px-4 py-3 align-top">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted tabular-nums">#{ticket.ticketNumber}</span>
-                        <span className="truncate font-medium text-ink">{ticket.subject}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <PriorityBadge priority={ticket.priority} />
+                        <StatusBadge status={ticket.status} />
                       </div>
-                      <div className="mt-0.5 truncate text-xs text-muted">
-                        {ticket.author?.name} · {ticket.book?.title ?? "General / Account Level"}
-                        {ticket.awaitingSupport && <span className="ml-2 font-medium text-brand-700">● Awaiting reply</span>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      {ticket.categoryLabel ? (
-                        <>
-                          <div className="text-ink">{ticket.categoryLabel}</div>
-                          <SourceTag source={ticket.categorySource} />
-                        </>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-violet-700">
-                          <Loader2 className="size-3 animate-spin" /> Classifying…
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 align-top"><StatusBadge status={ticket.status} /></td>
-                    <td className="px-4 py-3 align-top text-ink">
-                      {ticket.assignee ? (ticket.assignee.id === me?.id ? "You" : ticket.assignee.name) : <span className="text-muted">—</span>}
-                    </td>
-                    <td className="px-4 py-3 align-top tabular-nums">
-                      <span className={cn("inline-flex items-center gap-1", ticket.slaBreached ? "font-semibold text-red-600" : "text-ink")} title={ticket.slaBreached ? "First-response SLA breached" : undefined}>
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 text-xs tabular-nums",
+                          ticket.slaBreached ? "font-semibold text-red-600" : "text-muted",
+                        )}
+                      >
                         {ticket.slaBreached && <AlarmClock className="size-3.5" />}
                         {ageOf(ticket.createdAt, now)}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 align-top text-xs text-muted">{timeAgo(ticket.lastActivityAt, now)}</td>
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-ink">
+                      <span className="mr-1.5 text-xs font-normal text-muted tabular-nums">
+                        #{ticket.ticketNumber}
+                      </span>
+                      {ticket.subject}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {ticket.author?.name} · {ticket.categoryLabel ?? "Classifying…"}
+                      {ticket.assignee && (
+                        <> · {ticket.assignee.id === me?.id ? "You" : ticket.assignee.name}</>
+                      )}
+                    </p>
+                    {ticket.awaitingSupport && (
+                      <p className="mt-1 text-xs font-medium text-brand-700">● Awaiting reply</p>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-240 text-left text-sm">
+                <thead className="border-b border-line bg-slate-50 text-xs font-medium text-muted">
+                  <tr>
+                    <th className="px-4 py-2.5">Priority</th>
+                    <th className="px-4 py-2.5">Ticket</th>
+                    <th className="px-4 py-2.5">Category</th>
+                    <th className="px-4 py-2.5">Status</th>
+                    <th className="px-4 py-2.5">Assignee</th>
+                    <th className="px-4 py-2.5">Age</th>
+                    <th className="px-4 py-2.5">Last activity</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {data.tickets.map((ticket) => (
+                    <tr
+                      key={ticket.id}
+                      onClick={() => navigate(`/admin/tickets/${ticket.id}`)}
+                      className={cn(
+                        "cursor-pointer border-l-4 transition hover:bg-brand-50/40",
+                        PRIORITY_BORDER[ticket.priority],
+                      )}
+                    >
+                      <td className="px-4 py-3 align-top">
+                        <PriorityBadge priority={ticket.priority} />
+                        <div className="mt-1">
+                          <SourceTag source={ticket.prioritySource} />
+                        </div>
+                      </td>
+                      <td className="max-w-md px-4 py-3 align-top">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted tabular-nums">
+                            #{ticket.ticketNumber}
+                          </span>
+                          <span className="truncate font-medium text-ink">{ticket.subject}</span>
+                        </div>
+                        <div className="mt-0.5 truncate text-xs text-muted">
+                          {ticket.author?.name} · {ticket.book?.title ?? "General / Account Level"}
+                          {ticket.awaitingSupport && (
+                            <span className="ml-2 font-medium text-brand-700">
+                              ● Awaiting reply
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        {ticket.categoryLabel ? (
+                          <>
+                            <div className="text-ink">{ticket.categoryLabel}</div>
+                            <SourceTag source={ticket.categorySource} />
+                          </>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-violet-700">
+                            <Loader2 className="size-3 animate-spin" /> Classifying…
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <StatusBadge status={ticket.status} />
+                      </td>
+                      <td className="px-4 py-3 align-top text-ink">
+                        {ticket.assignee ? (
+                          ticket.assignee.id === me?.id ? (
+                            "You"
+                          ) : (
+                            ticket.assignee.name
+                          )
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 align-top tabular-nums">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1",
+                            ticket.slaBreached ? "font-semibold text-red-600" : "text-ink",
+                          )}
+                          title={ticket.slaBreached ? "First-response SLA breached" : undefined}
+                        >
+                          {ticket.slaBreached && <AlarmClock className="size-3.5" />}
+                          {ageOf(ticket.createdAt, now)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 align-top text-xs text-muted">
+                        {timeAgo(ticket.lastActivityAt, now)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
 
         {data && data.pagination.totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-line px-4 py-3 text-xs text-muted">
             <span>
-              Page {data.pagination.page} of {data.pagination.totalPages} · {data.pagination.total} tickets
+              Page {data.pagination.page} of {data.pagination.totalPages} · {data.pagination.total}{" "}
+              tickets
             </span>
             <div className="flex gap-2">
-              <Button variant="secondary" size="sm" icon={<ChevronLeft className="size-3.5" />} disabled={data.pagination.page <= 1} onClick={() => update({ page: String(data.pagination.page - 1) })}>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<ChevronLeft className="size-3.5" />}
+                disabled={data.pagination.page <= 1}
+                onClick={() => update({ page: String(data.pagination.page - 1) })}
+              >
                 Previous
               </Button>
-              <Button variant="secondary" size="sm" disabled={data.pagination.page >= data.pagination.totalPages} onClick={() => update({ page: String(data.pagination.page + 1) })}>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={data.pagination.page >= data.pagination.totalPages}
+                onClick={() => update({ page: String(data.pagination.page + 1) })}
+              >
                 Next <ChevronRight className="size-3.5" />
               </Button>
             </div>

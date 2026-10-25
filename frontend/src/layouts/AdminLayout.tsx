@@ -3,7 +3,13 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/Badge";
 import { useGetStatsQuery } from "@/store/api/adminApi";
 
-const NAV = [{ to: "/admin/tickets", label: "Ticket queue", icon: <Inbox className="size-4" /> }];
+const NAV = [
+  {
+    to: "/admin/tickets",
+    label: "Ticket queue",
+    icon: <Inbox className="size-4" />,
+  },
+];
 
 /** Tells the ops team up-front whether AI assistance is live or the app is in fallback mode. */
 function AiStatusPill() {

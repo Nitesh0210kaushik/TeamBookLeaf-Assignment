@@ -14,7 +14,10 @@ createRoot(document.getElementById("root")!).render(
         <App />
         <Toaster
           position="top-right"
-          toastOptions={{ style: { fontSize: "14px", borderRadius: "10px" }, duration: 3500 }}
+          toastOptions={{
+            style: { fontSize: "14px", borderRadius: "10px" },
+            duration: 3500,
+          }}
         />
       </BrowserRouter>
     </Provider>

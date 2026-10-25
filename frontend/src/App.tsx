@@ -8,8 +8,10 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 import { RequireRole, RootRedirect } from "@/routes/RequireRole";
 
 // Each portal is split into its own chunks: authors never download the admin console.
-const page = <T extends Record<string, React.ComponentType>>(loader: () => Promise<T>, name: keyof T) =>
-  lazy(() => loader().then((module) => ({ default: module[name] })));
+const page = <T extends Record<string, React.ComponentType>>(
+  loader: () => Promise<T>,
+  name: keyof T,
+) => lazy(() => loader().then((module) => ({ default: module[name] })));
 
 const MyBooksPage = page(() => import("@/pages/author/MyBooksPage"), "MyBooksPage");
 const MyTicketsPage = page(() => import("@/pages/author/MyTicketsPage"), "MyTicketsPage");

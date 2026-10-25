@@ -22,7 +22,15 @@ import { useRerunTriageMutation, useUpdateTicketMutation } from "@/store/api/tic
 import type { AdminTicketDetail } from "@/types/api";
 import { SourceTag } from "../tickets/TicketBadges";
 
-function Row({ label, children, footer }: { label: string; children: ReactNode; footer?: ReactNode }) {
+function Row({
+  label,
+  children,
+  footer,
+}: {
+  label: string;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
   return (
     <div className="space-y-1">
       <div className="text-xs font-medium text-muted">{label}</div>
@@ -52,7 +60,10 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
     const suggested = kind === "category" ? triage.suggestedCategory : triage.suggestedPriority;
     const current = kind === "category" ? ticket.category : ticket.priority;
     if (!suggested || suggested === current) return null;
-    const label = kind === "category" ? CATEGORY_LABELS[triage.suggestedCategory!] : PRIORITY_LABELS[triage.suggestedPriority!];
+    const label =
+      kind === "category"
+        ? CATEGORY_LABELS[triage.suggestedCategory!]
+        : PRIORITY_LABELS[triage.suggestedPriority!];
     return <p className="text-xs text-muted">Overridden · AI suggested {label}</p>;
   };
 
@@ -66,9 +77,21 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
         <Row label="Status">
           <Select
             value={ticket.status}
-            onChange={(e) => save({ id: ticket.id, status: e.target.value as AdminTicketDetail["status"] }, "Status updated")}
+            onChange={(e) =>
+              save(
+                {
+                  id: ticket.id,
+                  status: e.target.value as AdminTicketDetail["status"],
+                },
+                "Status updated",
+              )
+            }
           >
-            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
+            ))}
           </Select>
         </Row>
 
@@ -76,9 +99,21 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
           <div className="flex items-center gap-2">
             <Select
               value={ticket.priority}
-              onChange={(e) => save({ id: ticket.id, priority: e.target.value as AdminTicketDetail["priority"] }, "Priority updated")}
+              onChange={(e) =>
+                save(
+                  {
+                    id: ticket.id,
+                    priority: e.target.value as AdminTicketDetail["priority"],
+                  },
+                  "Priority updated",
+                )
+              }
             >
-              {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
+              {PRIORITIES.map((p) => (
+                <option key={p} value={p}>
+                  {PRIORITY_LABELS[p]}
+                </option>
+              ))}
             </Select>
             <SourceTag source={ticket.prioritySource} />
           </div>
@@ -88,10 +123,22 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
           <div className="flex items-center gap-2">
             <Select
               value={ticket.category ?? ""}
-              onChange={(e) => save({ id: ticket.id, category: e.target.value as AdminTicketDetail["category"] & string }, "Category updated")}
+              onChange={(e) =>
+                save(
+                  {
+                    id: ticket.id,
+                    category: e.target.value as AdminTicketDetail["category"] & string,
+                  },
+                  "Category updated",
+                )
+              }
             >
               {!ticket.category && <option value="">Classifying…</option>}
-              {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {CATEGORY_LABELS[c]}
+                </option>
+              ))}
             </Select>
             <SourceTag source={ticket.categorySource} />
           </div>
@@ -101,15 +148,24 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
           <div className="flex items-center gap-2">
             <Select
               value={ticket.assignee?.id ?? ""}
-              onChange={(e) => save({ id: ticket.id, assigneeId: e.target.value || null }, "Assignee updated")}
+              onChange={(e) =>
+                save({ id: ticket.id, assigneeId: e.target.value || null }, "Assignee updated")
+              }
             >
               <option value="">Unassigned</option>
               {team?.map((member) => (
-                <option key={member.id} value={member.id}>{member.id === me?.id ? `${member.name} (you)` : member.name}</option>
+                <option key={member.id} value={member.id}>
+                  {member.id === me?.id ? `${member.name} (you)` : member.name}
+                </option>
               ))}
             </Select>
             {ticket.assignee?.id !== me?.id && me && (
-              <Button variant="secondary" size="sm" icon={<UserPlus className="size-3.5" />} onClick={() => save({ id: ticket.id, assigneeId: me.id }, "Assigned to you")}>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<UserPlus className="size-3.5" />}
+                onClick={() => save({ id: ticket.id, assigneeId: me.id }, "Assigned to you")}
+              >
                 Me
               </Button>
             )}
@@ -122,19 +178,34 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
               <Bot className="size-3.5" /> AI triage
             </span>
             {triage.status === "pending" ? (
-              <Badge tone="violet" icon={<Loader2 className="size-3 animate-spin" />}>Running</Badge>
+              <Badge tone="violet" icon={<Loader2 className="size-3 animate-spin" />}>
+                Running
+              </Badge>
             ) : triage.status === "completed" ? (
-              <Badge tone="violet">{triage.confidence !== null ? `${Math.round(triage.confidence * 100)}% confident` : "Done"}</Badge>
+              <Badge tone="violet">
+                {triage.confidence !== null
+                  ? `${Math.round(triage.confidence * 100)}% confident`
+                  : "Done"}
+              </Badge>
             ) : (
               <Badge tone="amber">Keyword rules</Badge>
             )}
           </div>
-          {triage.reasoning && <p className="mt-2 text-xs leading-relaxed text-violet-950/80">{triage.reasoning}</p>}
-          {triage.status === "fallback" && triage.fallbackReason && triage.fallbackReason !== "seed" && (
-            <p className="mt-1 text-xs text-amber-800">{AI_FALLBACK_REASONS[triage.fallbackReason] ?? triage.fallbackReason}</p>
+          {triage.reasoning && (
+            <p className="mt-2 text-xs leading-relaxed text-violet-950/80">{triage.reasoning}</p>
           )}
+          {triage.status === "fallback" &&
+            triage.fallbackReason &&
+            triage.fallbackReason !== "seed" && (
+              <p className="mt-1 text-xs text-amber-800">
+                {AI_FALLBACK_REASONS[triage.fallbackReason] ?? triage.fallbackReason}
+              </p>
+            )}
           <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] text-muted">
-            <span className="min-w-0 truncate" title={triage.model ? `Classified by ${triage.model}` : undefined}>
+            <span
+              className="min-w-0 truncate"
+              title={triage.model ? `Classified by ${triage.model}` : undefined}
+            >
               Updated {timeAgo(triage.completedAt)}
             </span>
             <button

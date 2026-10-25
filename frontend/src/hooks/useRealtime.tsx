@@ -19,7 +19,9 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const source = new EventSource(`${API_BASE_URL}/realtime/stream`, { withCredentials: true });
+    const source = new EventSource(`${API_BASE_URL}/realtime/stream`, {
+      withCredentials: true,
+    });
 
     source.addEventListener("connected", () => setConnected(true));
     source.addEventListener("ticket.updated", (event) => {
