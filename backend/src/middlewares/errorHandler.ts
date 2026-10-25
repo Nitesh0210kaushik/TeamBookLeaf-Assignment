@@ -1,7 +1,9 @@
 import type { ErrorRequestHandler } from "express";
 import mongoose from "mongoose";
+import multer from "multer";
 import { logger } from "../config/logger";
 import { ERROR_CODES, HTTP_STATUS } from "../constants/http";
+import { TICKET_LIMITS } from "../constants/ticket";
 import { ApiError } from "../utils/ApiError";
 import { apiErrorResponse } from "../utils/ApiResponse";
 
@@ -21,6 +23,16 @@ function normalizeError(error: unknown): ApiError {
       details[path] = [issue.message];
     }
     return ApiError.badRequest("Validation failed.", details);
+  }
+
+  if (error instanceof multer.MulterError) {
+    const messages: Partial<Record<multer.ErrorCode, string>> = {
+      LIMIT_FILE_SIZE: "Each attachment must be 10 MB or smaller.",
+      LIMIT_FILE_COUNT: `You can attach up to ${TICKET_LIMITS.ATTACHMENTS_MAX} files.`,
+      LIMIT_UNEXPECTED_FILE: `You can attach up to ${TICKET_LIMITS.ATTACHMENTS_MAX} files.`,
+    };
+    const message = messages[error.code] ?? "The upload could not be processed.";
+    return ApiError.badRequest(message, { attachments: [message] });
   }
 
   // Malformed JSON body from express.json()

@@ -16,6 +16,7 @@ import { logger } from "../config/logger";
 import type { TicketStatus } from "../constants/ticket";
 import { AiDraftModel } from "../modules/ai/models/ai-draft.model";
 import { AiUsageLogModel } from "../modules/ai/models/ai-usage-log.model";
+import { attachmentRepository } from "../modules/attachments/repositories/attachment.repository";
 import { aiTriageService } from "../modules/ai/services/ai-triage.service";
 import { UserModel } from "../modules/auth/models/user.model";
 import { AuthorModel } from "../modules/authors/models/author.model";
@@ -36,7 +37,7 @@ const ADMINS = [
   { name: "Karan Singh", email: "ops@bookleaf.com" },
 ];
 
-// ------------------------------------------------------------------ dataset schema
+// Dataset schema
 
 const nullableDate = z
   .string()
@@ -102,7 +103,7 @@ function checkIntegrity(dataset: Dataset) {
   }
 }
 
-// ------------------------------------------------------------------ demo tickets
+// Demo tickets
 
 type DemoTicket = {
   authorCode: string;
@@ -229,8 +230,6 @@ const DEMO_TICKETS: DemoTicket[] = [
   },
 ];
 
-// ------------------------------------------------------------------ seed
-
 async function seed() {
   const dataset = loadDataset();
   checkIntegrity(dataset);
@@ -250,6 +249,7 @@ async function seed() {
   ] as unknown as (typeof UserModel)[];
 
   await Promise.all(models.map((model) => model.deleteMany({})));
+  await attachmentRepository.deleteAll();
   // autoIndex is off in production, so the seed creates every schema index explicitly
   // (unique emails/codes, the queue's sort index, ...).
   await Promise.all(models.map((model) => model.syncIndexes()));

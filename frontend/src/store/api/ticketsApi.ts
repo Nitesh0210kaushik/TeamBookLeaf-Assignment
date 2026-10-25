@@ -4,7 +4,6 @@ import type {
   AiDraft,
   AiStatus,
   ApiSuccess,
-  Attachment,
   AuthorTicketDetail,
   AuthorTicketSummary,
   Pagination,
@@ -18,6 +17,14 @@ import { baseApi } from "./baseApi";
 type TicketList<T> = { tickets: T[]; pagination: Pagination };
 type DraftResponse = { draft: AiDraft; ai: AiStatus };
 
+/** Text fields plus files as multipart/form-data (the browser sets the boundary header). */
+function toFormData(fields: Record<string, string>, files: File[]) {
+  const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) form.append(key, value);
+  for (const file of files) form.append("attachments", file);
+  return form;
+}
+
 const ticketTags = (id: string) => [
   { type: "Ticket" as const, id },
   "TicketList" as const,
@@ -26,7 +33,7 @@ const ticketTags = (id: string) => [
 
 export const ticketsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    // ------------------------------------------------------------- author
+    // Author
     listMyTickets: build.query<TicketList<AuthorTicketSummary>, void>({
       query: () => ({ url: "/tickets", params: { limit: 100 } }),
       transformResponse: (r: ApiSuccess<TicketList<AuthorTicketSummary>>) => r.data,
@@ -39,19 +46,27 @@ export const ticketsApi = baseApi.injectEndpoints({
     }),
     createTicket: build.mutation<
       AuthorTicketDetail,
-      { bookId: string | null; subject: string; description: string; attachments: Attachment[] }
+      { bookId: string | null; subject: string; description: string; files: File[] }
     >({
-      query: (body) => ({ url: "/tickets", method: "POST", body }),
+      query: ({ bookId, subject, description, files }) => ({
+        url: "/tickets",
+        method: "POST",
+        body: toFormData({ bookId: bookId ?? "", subject, description }, files),
+      }),
       transformResponse: (r: ApiSuccess<{ ticket: AuthorTicketDetail }>) => r.data.ticket,
       invalidatesTags: ["TicketList"],
     }),
-    replyAsAuthor: build.mutation<AuthorTicketDetail, { id: string; body: string }>({
-      query: ({ id, body }) => ({ url: `/tickets/${id}/messages`, method: "POST", body: { body } }),
+    replyAsAuthor: build.mutation<AuthorTicketDetail, { id: string; body: string; files: File[] }>({
+      query: ({ id, body, files }) => ({
+        url: `/tickets/${id}/messages`,
+        method: "POST",
+        body: toFormData({ body }, files),
+      }),
       transformResponse: (r: ApiSuccess<{ ticket: AuthorTicketDetail }>) => r.data.ticket,
       invalidatesTags: (_r, _e, { id }) => ticketTags(id),
     }),
 
-    // -------------------------------------------------------------- admin
+    // Admin
     listQueue: build.query<TicketList<AdminTicketSummary>, TicketListQuery>({
       query: (params) => ({ url: "/tickets", params }),
       transformResponse: (r: ApiSuccess<TicketList<AdminTicketSummary>>) => r.data,
@@ -72,20 +87,32 @@ export const ticketsApi = baseApi.injectEndpoints({
         assigneeId?: string | null;
       }
     >({
-      query: ({ id, ...body }) => ({ url: `/tickets/${id}`, method: "PATCH", body }),
+      query: ({ id, ...body }) => ({
+        url: `/tickets/${id}`,
+        method: "PATCH",
+        body,
+      }),
       transformResponse: (r: ApiSuccess<{ ticket: AdminTicketDetail }>) => r.data.ticket,
       invalidatesTags: (_r, _e, { id }) => [...ticketTags(id), { type: "Draft", id }],
     }),
     replyAsAdmin: build.mutation<
       AdminTicketDetail,
-      { id: string; body: string; status?: TicketStatus; aiAssisted: boolean }
+      { id: string; body: string; status?: TicketStatus; aiAssisted: boolean; files: File[] }
     >({
-      query: ({ id, ...body }) => ({ url: `/tickets/${id}/messages`, method: "POST", body }),
+      query: ({ id, body, status, aiAssisted, files }) => ({
+        url: `/tickets/${id}/messages`,
+        method: "POST",
+        body: toFormData({ body, status: status ?? "", aiAssisted: String(aiAssisted) }, files),
+      }),
       transformResponse: (r: ApiSuccess<{ ticket: AdminTicketDetail }>) => r.data.ticket,
       invalidatesTags: (_r, _e, { id }) => ticketTags(id),
     }),
     addNote: build.mutation<AdminTicketDetail, { id: string; body: string }>({
-      query: ({ id, body }) => ({ url: `/tickets/${id}/notes`, method: "POST", body: { body } }),
+      query: ({ id, body }) => ({
+        url: `/tickets/${id}/notes`,
+        method: "POST",
+        body: { body },
+      }),
       transformResponse: (r: ApiSuccess<{ ticket: AdminTicketDetail }>) => r.data.ticket,
       invalidatesTags: (_r, _e, { id }) => [{ type: "Ticket", id }],
     }),

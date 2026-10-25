@@ -20,7 +20,11 @@ const DESCRIPTION_MAX = 5000;
 // Mirrors the backend rules so most mistakes are caught before the request.
 const schema = z.object({
   bookId: z.string(),
-  subject: z.string().trim().min(5, "Subject must be at least 5 characters.").max(150, "Keep the subject under 150 characters."),
+  subject: z
+    .string()
+    .trim()
+    .min(5, "Subject must be at least 5 characters.")
+    .max(150, "Keep the subject under 150 characters."),
   description: z
     .string()
     .trim()
@@ -64,7 +68,7 @@ export function NewTicketPage() {
         bookId: values.bookId || null,
         subject: values.subject,
         description: values.description,
-        attachments: files.map((file) => ({ fileName: file.name, fileSize: file.size, mimeType: file.type || null })),
+        files,
       }).unwrap();
       toast.success(`Ticket #${ticket.ticketNumber} submitted`);
       navigate(`/tickets/${ticket.id}`);
@@ -81,12 +85,19 @@ export function NewTicketPage() {
 
   return (
     <>
-      <PageHeader title="Submit a support query" description="Tell us what's going on — the more specific, the faster we can help." />
+      <PageHeader
+        title="Submit a support query"
+        description="Tell us what's going on — the more specific, the faster we can help."
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <Card className="p-6">
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
-            <Field label="Which book is this about?" htmlFor="bookId" error={errors.bookId?.message}>
+            <Field
+              label="Which book is this about?"
+              htmlFor="bookId"
+              error={errors.bookId?.message}
+            >
               <Select id="bookId" {...register("bookId")}>
                 <option value="">General / Account Level</option>
                 {books?.map((book) => (
@@ -99,7 +110,12 @@ export function NewTicketPage() {
             </Field>
 
             <Field label="Subject" htmlFor="subject" error={errors.subject?.message}>
-              <Input id="subject" placeholder="e.g. Royalty for Q2 not received" aria-invalid={!!errors.subject} {...register("subject")} />
+              <Input
+                id="subject"
+                placeholder="e.g. Royalty for Q2 not received"
+                aria-invalid={!!errors.subject}
+                {...register("subject")}
+              />
             </Field>
 
             <Field
@@ -108,8 +124,12 @@ export function NewTicketPage() {
               error={errors.description?.message}
               hint={
                 <span className="flex justify-between gap-4">
-                  <span>Include dates, amounts, platform names or order numbers if you have them.</span>
-                  <span className="tabular-nums">{descriptionLength}/{DESCRIPTION_MAX}</span>
+                  <span>
+                    Include dates, amounts, platform names or order numbers if you have them.
+                  </span>
+                  <span className="tabular-nums">
+                    {descriptionLength}/{DESCRIPTION_MAX}
+                  </span>
                 </span>
               }
             >
@@ -130,25 +150,41 @@ export function NewTicketPage() {
             </div>
 
             <div className="flex justify-end gap-2 border-t border-line pt-5">
-              <Button variant="secondary" onClick={() => navigate(-1)}>Cancel</Button>
-              <Button type="submit" loading={isLoading} icon={<Send className="size-4" />}>Submit query</Button>
+              <Button variant="secondary" onClick={() => navigate(-1)}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={isLoading} icon={<Send className="size-4" />}>
+                Submit query
+              </Button>
             </div>
           </form>
         </Card>
 
         <aside className="space-y-4">
           <Card className="p-5">
-            <h3 className="flex items-center gap-2 text-sm font-semibold"><Clock3 className="size-4 text-brand-600" />What happens next</h3>
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <Clock3 className="size-4 text-brand-600" />
+              What happens next
+            </h3>
             <ol className="mt-3 space-y-2 text-sm text-muted">
               <li>1. Your query is routed to the right team automatically.</li>
               <li>2. Urgent issues — missing royalties, ISBN errors — are prioritised first.</li>
-              <li>3. You'll see our reply under <span className="font-medium text-ink">My Tickets</span> the moment it's sent.</li>
+              <li>
+                3. You'll see our reply under{" "}
+                <span className="font-medium text-ink">My Tickets</span> the moment it's sent.
+              </li>
             </ol>
           </Card>
           <Card className="p-5">
-            <h3 className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4 text-brand-600" />Quick answers</h3>
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <Sparkles className="size-4 text-brand-600" />
+              Quick answers
+            </h3>
             <ul className="mt-3 space-y-2 text-sm text-muted">
-              <li>Royalties are paid within 45 days after each quarter, once your balance is at least ₹1,000.</li>
+              <li>
+                Royalties are paid within 45 days after each quarter, once your balance is at least
+                ₹1,000.
+              </li>
               <li>New listings go live 7–10 business days after publication.</li>
               <li>Description changes reflect on stores within 3–5 business days.</li>
             </ul>

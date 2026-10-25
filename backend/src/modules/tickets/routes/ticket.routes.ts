@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { requireAuth, requireRoles } from "../../../middlewares/auth";
 import { aiRateLimiter } from "../../../middlewares/rateLimiter";
+import { uploadAttachments } from "../../../middlewares/uploadAttachments";
 import { validateRequest } from "../../../middlewares/validateRequest";
+import { downloadAttachment } from "../../attachments/controllers/attachment.controller";
 import {
   addMessage,
   addNote,
@@ -16,6 +18,7 @@ import {
 import {
   addMessageSchema,
   addNoteSchema,
+  attachmentParamsSchema,
   createTicketSchema,
   listTicketsQuerySchema,
   ticketParamsSchema,
@@ -28,20 +31,27 @@ const withTicketId = validateRequest({ params: ticketParamsSchema });
 
 ticketRoutes.use(requireAuth);
 
-// Shared (scoped by role inside the service)
+// Shared (scoped by role inside the services)
 ticketRoutes.get("/", validateRequest({ query: listTicketsQuerySchema }), listTickets);
 ticketRoutes.get("/:ticketId", withTicketId, getTicket);
 ticketRoutes.post(
   "/:ticketId/messages",
   withTicketId,
+  uploadAttachments,
   validateRequest({ body: addMessageSchema }),
   addMessage,
+);
+ticketRoutes.get(
+  "/:ticketId/attachments/:fileId",
+  validateRequest({ params: attachmentParamsSchema }),
+  downloadAttachment,
 );
 
 // Author only
 ticketRoutes.post(
   "/",
   requireRoles("author"),
+  uploadAttachments,
   validateRequest({ body: createTicketSchema }),
   createTicket,
 );

@@ -6,16 +6,7 @@ import {
   TICKET_STATUSES,
   TRIAGE_STATUSES,
 } from "../../../constants/ticket";
-
-/** Attachment metadata only — file upload is UI-only in this version (see README limitations). */
-const attachmentSchema = new Schema(
-  {
-    fileName: { type: String, required: true, trim: true },
-    fileSize: { type: Number, required: true, min: 0 },
-    mimeType: { type: String, default: null },
-  },
-  { _id: false },
-);
+import { attachmentSchema } from "./attachment.schema";
 
 /**
  * The AI's own suggestion is kept even after an admin overrides it — comparing it with the

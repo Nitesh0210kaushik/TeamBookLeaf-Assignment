@@ -9,6 +9,12 @@ import { summarizeRoyalties, toIsoDate } from "../../books/utils/royalty";
 import type { TicketRecord } from "../models/ticket.model";
 import { ticketMessageRepository } from "../repositories/ticket-message.repository";
 
+/** Tells the model which files came with a message (names only, never contents). */
+function withAttachmentNote(body: string, attachments?: { fileName: string }[] | null) {
+  if (!attachments?.length) return body;
+  return `${body}\n[Attached: ${attachments.map((file) => file.fileName).join(", ")}]`;
+}
+
 function toBookFacts(book: BookRecord): BookFacts {
   return {
     bookCode: book.bookCode,
@@ -92,12 +98,12 @@ export class TicketContextService {
       conversation: [
         {
           role: "author" as const,
-          body: ticket.description,
+          body: withAttachmentNote(ticket.description, ticket.attachments),
           createdAt: ticket.createdAt.toISOString(),
         },
         ...messages.map((message) => ({
           role: message.senderRole,
-          body: message.body,
+          body: withAttachmentNote(message.body, message.attachments),
           createdAt: message.createdAt.toISOString(),
         })),
       ],

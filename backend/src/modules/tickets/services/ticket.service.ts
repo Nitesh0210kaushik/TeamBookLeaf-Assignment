@@ -3,6 +3,7 @@ import { logger } from "../../../config/logger";
 import type { AuthUser } from "../../../middlewares/auth";
 import { ApiError } from "../../../utils/ApiError";
 import { buildPagination } from "../../../utils/ApiResponse";
+import { attachmentService } from "../../attachments/services/attachment.service";
 import { bookRepository } from "../../books/repositories/book.repository";
 import { realtimeService } from "../../realtime/services/realtime.service";
 import {
@@ -34,7 +35,7 @@ export class TicketService {
    * Creates the ticket immediately and triages it in the background: the author never waits on
    * the AI, and an AI outage can't block ticket creation.
    */
-  async createTicket(user: AuthUser, input: CreateTicketInput) {
+  async createTicket(user: AuthUser, input: CreateTicketInput, files?: Express.Multer.File[]) {
     if (input.bookId) {
       const book = await bookRepository.findById(input.bookId);
       if (!book || String(book.author) !== user.authorId) {
@@ -44,21 +45,27 @@ export class TicketService {
       }
     }
 
+    const attachments = await attachmentService.store(attachmentService.prepare(files), user.id);
     const now = new Date();
-    const ticket = await ticketRepository.create({
-      ticketNumber: await nextSequence("ticketNumber"),
-      author: user.authorId,
-      createdBy: user.id,
-      book: input.bookId ?? null,
-      subject: input.subject,
-      description: input.description,
-      attachments: input.attachments.map((file) => ({ ...file, mimeType: file.mimeType ?? null })),
-      ...statusFields("open", {}, now),
-      ...priorityFields("medium", now),
-      triage: { status: "pending" },
-      lastActivityAt: now,
-      lastAuthorMessageAt: now,
-    });
+    const ticket = await ticketRepository
+      .create({
+        ticketNumber: await nextSequence("ticketNumber"),
+        author: user.authorId,
+        createdBy: user.id,
+        book: input.bookId ?? null,
+        subject: input.subject,
+        description: input.description,
+        attachments,
+        ...statusFields("open", {}, now),
+        ...priorityFields("medium", now),
+        triage: { status: "pending" },
+        lastActivityAt: now,
+        lastAuthorMessageAt: now,
+      })
+      .catch(async (error) => {
+        await attachmentService.discard(attachments);
+        throw error;
+      });
 
     await ticketEventRepository.createMany([
       { ticketId: ticket._id, actorId: user.id, type: "created" },
@@ -138,8 +145,14 @@ export class TicketService {
   }
 
   /** Authors reply to their own tickets; admins send responses that the author sees. */
-  async addMessage(user: AuthUser, ticketId: string, input: AddMessageInput) {
+  async addMessage(
+    user: AuthUser,
+    ticketId: string,
+    input: AddMessageInput,
+    files?: Express.Multer.File[],
+  ) {
     const ticket = await getAccessibleTicket(user, ticketId);
+    const preparedFiles = attachmentService.prepare(files);
     const now = new Date();
     const events: NewTicketEvent[] = [];
     let update: Record<string, unknown>;
@@ -194,13 +207,20 @@ export class TicketService {
       }
     }
 
-    await ticketMessageRepository.create({
-      ticketId: ticket._id,
-      senderId: user.id,
-      senderRole: user.role,
-      body: input.body,
-      aiAssisted: user.role === "admin" && input.aiAssisted,
-    });
+    const attachments = await attachmentService.store(preparedFiles, user.id);
+    await ticketMessageRepository
+      .create({
+        ticketId: ticket._id,
+        senderId: user.id,
+        senderRole: user.role,
+        body: input.body,
+        attachments,
+        aiAssisted: user.role === "admin" && input.aiAssisted,
+      })
+      .catch(async (error) => {
+        await attachmentService.discard(attachments);
+        throw error;
+      });
     const updated = await ticketRepository.updateById(ticket._id, {
       $set: { ...update, lastActivityAt: now },
       $inc: { messageCount: 1 },

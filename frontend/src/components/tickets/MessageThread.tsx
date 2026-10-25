@@ -9,6 +9,7 @@ export type ThreadItem = {
   body: string;
   createdAt: string;
   tag?: ReactNode;
+  attachments?: ReactNode;
 };
 
 function initials(name: string) {
@@ -49,11 +50,14 @@ export function MessageThread({ items, emptyText }: { items: ThreadItem[]; empty
             <div
               className={cn(
                 "mt-1.5 rounded-xl px-4 py-3 text-sm whitespace-pre-wrap text-ink",
-                item.side === "support" ? "border border-brand-100 bg-brand-50/60" : "border border-line bg-white",
+                item.side === "support"
+                  ? "border border-brand-100 bg-brand-50/60"
+                  : "border border-line bg-white",
               )}
             >
               {item.body}
             </div>
+            {item.attachments && <div className="mt-2">{item.attachments}</div>}
           </div>
         </li>
       ))}

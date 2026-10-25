@@ -36,11 +36,23 @@ function userRef(id: unknown, relations: TicketRelations): Ref {
   return user ? { id: String(user._id), name: user.name } : null;
 }
 
+type AttachmentRecord = NonNullable<TicketRecord["attachments"]>[number];
+
+/** `id` is the download handle; legacy metadata-only entries have none. */
+function toAttachmentDtos(attachments: AttachmentRecord[] | undefined) {
+  return (attachments ?? []).map((file) => ({
+    id: file.fileId ? String(file.fileId) : null,
+    fileName: file.fileName,
+    fileSize: file.fileSize,
+    mimeType: file.mimeType ?? null,
+  }));
+}
+
 function categoryLabel(category: string | null | undefined) {
   return category ? CATEGORY_LABELS[category as TicketCategory] : null;
 }
 
-// ---------------------------------------------------------------- author-facing
+// Author-facing
 
 /** What an author may see. No priority, AI internals, assignee, notes or audit events. */
 export function toAuthorTicketSummaryDto(ticket: TicketRecord, relations: TicketRelations) {
@@ -69,6 +81,7 @@ export function toAuthorMessageDto(message: TicketMessageRecord, relations: Tick
         ? `BookLeaf Support${sender ? ` · ${firstName(sender.name)}` : ""}`
         : (sender?.name ?? "You"),
     body: message.body,
+    attachments: toAttachmentDtos(message.attachments),
     createdAt: iso(message.createdAt)!,
   };
 }
@@ -81,12 +94,12 @@ export function toAuthorTicketDetailDto(
   return {
     ...toAuthorTicketSummaryDto(ticket, relations),
     description: ticket.description,
-    attachments: ticket.attachments ?? [],
+    attachments: toAttachmentDtos(ticket.attachments),
     messages: messages.map((message) => toAuthorMessageDto(message, relations)),
   };
 }
 
-// ----------------------------------------------------------------- admin-facing
+// Admin-facing
 
 export function toAdminTicketSummaryDto(
   ticket: TicketRecord,
@@ -137,7 +150,7 @@ export function toAdminTicketDetailDto(input: {
   return {
     ...toAdminTicketSummaryDto(ticket, relations),
     description: ticket.description,
-    attachments: ticket.attachments ?? [],
+    attachments: toAttachmentDtos(ticket.attachments),
     triage: {
       status: triage?.status ?? "pending",
       suggestedCategory: triage?.suggestedCategory ?? null,
@@ -153,6 +166,7 @@ export function toAdminTicketDetailDto(input: {
       senderRole: message.senderRole,
       sender: userRef(message.sender, relations),
       body: message.body,
+      attachments: toAttachmentDtos(message.attachments),
       aiAssisted: message.aiAssisted,
       createdAt: iso(message.createdAt)!,
     })),

@@ -27,7 +27,11 @@ export const STATUSES = Object.keys(STATUS_LABELS) as TicketStatus[];
 export const PRIORITIES = Object.keys(PRIORITY_LABELS) as TicketPriority[];
 export const CATEGORIES = Object.keys(CATEGORY_LABELS) as TicketCategory[];
 
-export const SOURCE_LABELS = { ai: "AI", rules: "Keywords", admin: "Manual" } as const;
+export const SOURCE_LABELS = {
+  ai: "AI",
+  rules: "Keywords",
+  admin: "Manual",
+} as const;
 
 /** Human-readable reasons shown when the AI could not be used. */
 export const AI_FALLBACK_REASONS: Record<string, string> = {
@@ -63,4 +67,11 @@ export const PRODUCTION_STAGES = [
   "Published & Live",
 ];
 
-export const ATTACHMENT_LIMITS = { maxFiles: 3, maxBytes: 10 * 1024 * 1024 };
+/** Mirrors the server rules; the server also verifies each file's actual content. */
+export const ATTACHMENT_LIMITS = {
+  maxFiles: 3,
+  maxBytes: 10 * 1024 * 1024,
+  extensions: ["jpg", "jpeg", "png", "webp", "pdf", "docx", "xlsx", "csv"],
+  accept: ".jpg,.jpeg,.png,.webp,.pdf,.docx,.xlsx,.csv",
+  label: "JPG, PNG, WEBP, PDF, DOCX, XLSX or CSV",
+};

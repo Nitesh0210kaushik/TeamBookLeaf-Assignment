@@ -8,7 +8,11 @@ import { ticketService } from "../services/ticket.service";
 import type { ListTicketsQuery } from "../validations/ticket.validation";
 
 export const createTicket = catchAsync(async (req: Request, res: Response) => {
-  const ticket = await ticketService.createTicket(req.user!, req.body);
+  const ticket = await ticketService.createTicket(
+    req.user!,
+    req.body,
+    req.files as Express.Multer.File[] | undefined,
+  );
   res
     .status(HTTP_STATUS.CREATED)
     .json(apiResponse("Ticket submitted. Our team will get back to you soon.", { ticket }));
@@ -28,7 +32,12 @@ export const getTicket = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const addMessage = catchAsync(async (req: Request, res: Response) => {
-  const ticket = await ticketService.addMessage(req.user!, req.params.ticketId, req.body);
+  const ticket = await ticketService.addMessage(
+    req.user!,
+    req.params.ticketId,
+    req.body,
+    req.files as Express.Multer.File[] | undefined,
+  );
   res.status(HTTP_STATUS.CREATED).json(apiResponse("Message sent.", { ticket }));
 });
 

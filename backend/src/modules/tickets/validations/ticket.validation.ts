@@ -20,13 +20,27 @@ const csvEnum = <T extends readonly [string, ...string[]]>(values: T, label: str
     )
     .pipe(z.array(z.enum(values, { error: `Invalid ${label}. Allowed: ${values.join(", ")}.` })));
 
+/** Multipart forms send every field as a string; an empty one means "not provided". */
+const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
+
+const formBoolean = z.preprocess(
+  (value) => (value === "true" ? true : value === "false" ? false : emptyToUndefined(value)),
+  z.boolean().optional(),
+);
+
 export const ticketParamsSchema = z.object({
   ticketId: objectIdSchema("ticket id"),
 });
 
+export const attachmentParamsSchema = z.object({
+  ticketId: objectIdSchema("ticket id"),
+  fileId: objectIdSchema("attachment id"),
+});
+
+/** Sent as multipart/form-data; files arrive separately in the `attachments` field. */
 export const createTicketSchema = z.object({
-  /** null / omitted = "General / Account Level". */
-  bookId: objectIdSchema("book id").nullable().optional(),
+  /** Omitted or empty = "General / Account Level". */
+  bookId: z.preprocess(emptyToUndefined, objectIdSchema("book id").nullable().optional()),
   subject: z
     .string({ error: "Subject is required." })
     .trim()
@@ -43,23 +57,6 @@ export const createTicketSchema = z.object({
       TICKET_LIMITS.DESCRIPTION_MAX,
       `Description cannot exceed ${TICKET_LIMITS.DESCRIPTION_MAX} characters.`,
     ),
-  attachments: z
-    .array(
-      z.object({
-        fileName: z.string().trim().min(1).max(255),
-        fileSize: z
-          .number()
-          .int()
-          .min(0)
-          .max(TICKET_LIMITS.ATTACHMENT_MAX_BYTES, "Each attachment must be 10 MB or smaller."),
-        mimeType: z.string().max(100).nullable().optional(),
-      }),
-    )
-    .max(
-      TICKET_LIMITS.ATTACHMENTS_MAX,
-      `You can attach up to ${TICKET_LIMITS.ATTACHMENTS_MAX} files.`,
-    )
-    .default([]),
 });
 
 export const listTicketsQuerySchema = z
@@ -97,9 +94,9 @@ export const addMessageSchema = z.object({
       `Message cannot exceed ${TICKET_LIMITS.MESSAGE_MAX} characters.`,
     ),
   /** Admin only: status to set together with the reply (e.g. reply + resolve). */
-  status: z.enum(TICKET_STATUSES).optional(),
+  status: z.preprocess(emptyToUndefined, z.enum(TICKET_STATUSES).optional()),
   /** Admin only: the reply started from the AI draft. */
-  aiAssisted: z.boolean().optional().default(false),
+  aiAssisted: formBoolean.default(false),
 });
 
 export const updateTicketSchema = z

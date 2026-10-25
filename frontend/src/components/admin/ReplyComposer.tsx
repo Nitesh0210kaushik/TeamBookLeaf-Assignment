@@ -1,13 +1,18 @@
 import { Bot, FileText, Loader2, RefreshCw, RotateCcw, Send, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { AttachmentPicker } from "@/components/tickets/AttachmentPicker";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Select, Textarea } from "@/components/ui/Field";
 import { AI_FALLBACK_REASONS, KB_SECTION_LABELS } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
-import { useGetDraftQuery, useRegenerateDraftMutation, useReplyAsAdminMutation } from "@/store/api/ticketsApi";
+import {
+  useGetDraftQuery,
+  useRegenerateDraftMutation,
+  useReplyAsAdminMutation,
+} from "@/store/api/ticketsApi";
 import type { AdminTicketDetail, TicketStatus } from "@/types/api";
 
 /**
@@ -17,7 +22,9 @@ import type { AdminTicketDetail, TicketStatus } from "@/types/api";
 export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
   // Only draft automatically when the author is waiting on us — saves calls on tickets we already answered.
   const [wantDraft, setWantDraft] = useState(ticket.awaitingSupport);
-  const draftQuery = useGetDraftQuery(ticket.id, { skip: !wantDraft || ticket.status === "closed" });
+  const draftQuery = useGetDraftQuery(ticket.id, {
+    skip: !wantDraft || ticket.status === "closed",
+  });
   const [regenerate, { isLoading: regenerating }] = useRegenerateDraftMutation();
   const [sendReply, { isLoading: sending }] = useReplyAsAdminMutation();
 
@@ -26,6 +33,7 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
   const [consumedDraftId, setConsumedDraftId] = useState<string | null>(null);
   const [edited, setEdited] = useState(false);
   const [nextStatus, setNextStatus] = useState<TicketStatus>("in_progress");
+  const [files, setFiles] = useState<File[]>([]);
 
   const draft = draftQuery.data?.draft;
 
@@ -43,11 +51,20 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
 
   const send = async () => {
     try {
-      await sendReply({ id: ticket.id, body, status: nextStatus, aiAssisted: loadedDraftId !== null }).unwrap();
-      toast.success(nextStatus === "resolved" ? "Reply sent and ticket resolved" : "Reply sent to the author");
+      await sendReply({
+        id: ticket.id,
+        body,
+        status: nextStatus,
+        aiAssisted: loadedDraftId !== null,
+        files,
+      }).unwrap();
+      toast.success(
+        nextStatus === "resolved" ? "Reply sent and ticket resolved" : "Reply sent to the author",
+      );
       setConsumedDraftId(loadedDraftId);
       setLoadedDraftId(null);
       setBody("");
+      setFiles([]);
       setEdited(false);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -87,7 +104,12 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
               Regenerate draft
             </Button>
           ) : (
-            <Button variant="ai" size="sm" icon={<Sparkles className="size-3.5" />} onClick={() => setWantDraft(true)}>
+            <Button
+              variant="ai"
+              size="sm"
+              icon={<Sparkles className="size-3.5" />}
+              onClick={() => setWantDraft(true)}
+            >
               Draft with AI
             </Button>
           )
@@ -106,22 +128,28 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
               {draft.source === "ai" ? (
                 // Model name stays in the tooltip — useful for debugging, noise for the ops team.
                 <span title={draft.model ? `Drafted by ${draft.model}` : undefined}>
-                  <Badge tone="violet" icon={<Bot className="size-3" />}>AI draft</Badge>
+                  <Badge tone="violet" icon={<Bot className="size-3" />}>
+                    AI draft
+                  </Badge>
                 </span>
               ) : (
                 <Badge tone="amber" icon={<FileText className="size-3" />}>
-                  Policy template · {AI_FALLBACK_REASONS[draft.fallbackReason ?? ""] ?? "AI unavailable"}
+                  Policy template ·{" "}
+                  {AI_FALLBACK_REASONS[draft.fallbackReason ?? ""] ?? "AI unavailable"}
                 </Badge>
               )}
               {draft.knowledgeSections.length > 0 && (
                 <span className="text-muted">
-                  Based on: {draft.knowledgeSections.map((key) => KB_SECTION_LABELS[key] ?? key).join(", ")}
+                  Based on:{" "}
+                  {draft.knowledgeSections.map((key) => KB_SECTION_LABELS[key] ?? key).join(", ")}
                 </span>
               )}
               <span className="ml-auto text-muted">Review and edit before sending.</span>
             </div>
           ) : draftQuery.error ? (
-            <span className="text-red-700">{getErrorMessage(draftQuery.error)} You can still write the reply manually.</span>
+            <span className="text-red-700">
+              {getErrorMessage(draftQuery.error)} You can still write the reply manually.
+            </span>
           ) : null}
         </div>
       )}
@@ -138,6 +166,7 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
           placeholder={drafting ? "Your draft will appear here…" : "Write your reply…"}
           aria-label="Reply"
         />
+        <AttachmentPicker files={files} onChange={setFiles} compact />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             {draft && edited && body !== draft.content && (
@@ -165,7 +194,12 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
               <option value="in_progress">Keep In Progress</option>
               <option value="resolved">Mark Resolved</option>
             </Select>
-            <Button onClick={send} loading={sending} disabled={!body.trim() || drafting} icon={<Send className="size-4" />}>
+            <Button
+              onClick={send}
+              loading={sending}
+              disabled={!body.trim() || drafting}
+              icon={<Send className="size-4" />}
+            >
               Send reply
             </Button>
           </div>

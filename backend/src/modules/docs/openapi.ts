@@ -21,6 +21,17 @@ const errors = (...codes: number[]) =>
   Object.fromEntries(codes.map((code) => [code, { $ref: `#/components/responses/E${code}` }]));
 const ticketIdParam = { name: "ticketId", in: "path", required: true, schema: { type: "string" } };
 const json = (schema: object) => ({ required: true, content: { "application/json": { schema } } });
+const multipart = (schema: object) => ({
+  required: true,
+  content: { "multipart/form-data": { schema } },
+});
+const attachmentsField = {
+  type: "array",
+  maxItems: 3,
+  items: { type: "string", format: "binary" },
+  description:
+    "Up to 3 files, 10 MB each: JPG, PNG, WEBP, PDF, DOCX, XLSX or CSV (checked by content)",
+};
 
 export const openApiSpec = {
   openapi: "3.0.3",
@@ -360,29 +371,17 @@ export const openApiSpec = {
       post: {
         tags: ["Tickets"],
         summary: "Author: submit a support query (AI triage runs in the background)",
-        requestBody: json({
+        requestBody: multipart({
           type: "object",
           required: ["subject", "description"],
           properties: {
             bookId: {
               type: "string",
-              nullable: true,
-              description: "Omit or null for General / Account Level",
+              description: "Omit or leave empty for General / Account Level",
             },
             subject: { type: "string", minLength: 5, maxLength: 150 },
             description: { type: "string", minLength: 20, maxLength: 5000 },
-            attachments: {
-              type: "array",
-              maxItems: 3,
-              items: {
-                type: "object",
-                properties: {
-                  fileName: { type: "string" },
-                  fileSize: { type: "integer" },
-                  mimeType: { type: "string" },
-                },
-              },
-            },
+            attachments: attachmentsField,
           },
         }),
         responses: { 201: ok("Created", { type: "object" }), ...errors(400, 401, 403) },
@@ -416,10 +415,10 @@ export const openApiSpec = {
       post: {
         tags: ["Tickets"],
         summary: "Reply on a ticket — author follow-up, or admin response visible to the author",
-        description:
-          "Admin replies move `open` tickets to `in_progress` unless `status` is given, and auto-assign unassigned tickets. Author replies reopen `resolved` tickets; `closed` tickets return 409.",
         parameters: [ticketIdParam],
-        requestBody: json({
+        description:
+          "Accepts JSON, or multipart/form-data when sending attachments. Admin replies move `open` tickets to `in_progress` unless `status` is given, and auto-assign unassigned tickets. Author replies reopen `resolved` tickets; `closed` tickets return 409.",
+        requestBody: multipart({
           type: "object",
           required: ["body"],
           properties: {
@@ -429,9 +428,24 @@ export const openApiSpec = {
               type: "boolean",
               description: "Admin only: reply started from the AI draft",
             },
+            attachments: attachmentsField,
           },
         }),
         responses: { 201: ok("Sent", { type: "object" }), ...errors(400, 401, 404, 409) },
+      },
+    },
+    "/tickets/{ticketId}/attachments/{fileId}": {
+      get: {
+        tags: ["Tickets"],
+        summary: "Download an attachment (ticket author and admins only)",
+        parameters: [
+          ticketIdParam,
+          { name: "fileId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "The file, served as a download with its detected content type" },
+          ...errors(400, 401, 404),
+        },
       },
     },
     "/tickets/{ticketId}/notes": {

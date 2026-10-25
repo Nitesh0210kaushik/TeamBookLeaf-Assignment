@@ -64,7 +64,11 @@ export type RoyaltySummary = {
   meetsPayoutThreshold: boolean;
   payoutNeedsReview: boolean;
   payoutThresholdInr: number;
-  schedule: { currentQuarter: string; nextPayoutQuarter: string; nextPayoutBy: string };
+  schedule: {
+    currentQuarter: string;
+    nextPayoutQuarter: string;
+    nextPayoutBy: string;
+  };
 };
 
 export type AuthorAccount = {
@@ -82,9 +86,15 @@ export type AuthorAccount = {
 };
 
 export type Ref = { id: string; name: string } | null;
-export type Attachment = { fileName: string; fileSize: number; mimeType: string | null };
+/** `id` is null for legacy entries stored without a file. */
+export type Attachment = {
+  id: string | null;
+  fileName: string;
+  fileSize: number;
+  mimeType: string | null;
+};
 
-// ------------------------------------------------------------------ author views
+// Author views
 
 export type AuthorTicketSummary = {
   id: string;
@@ -104,6 +114,7 @@ export type AuthorMessage = {
   senderRole: Role;
   senderName: string;
   body: string;
+  attachments: Attachment[];
   createdAt: string;
 };
 
@@ -113,7 +124,7 @@ export type AuthorTicketDetail = AuthorTicketSummary & {
   messages: AuthorMessage[];
 };
 
-// ------------------------------------------------------------------- admin views
+// Admin views
 
 export type AdminTicketSummary = {
   id: string;
@@ -168,6 +179,7 @@ export type AdminTicketDetail = AdminTicketSummary & {
     senderRole: Role;
     sender: Ref;
     body: string;
+    attachments: Attachment[];
     aiAssisted: boolean;
     createdAt: string;
   }>;
@@ -205,7 +217,12 @@ export type AiDraft = {
   cached: boolean;
 };
 
-export type Pagination = { page: number; limit: number; total: number; totalPages: number };
+export type Pagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
 
 export type AdminStats = {
   queue: {
