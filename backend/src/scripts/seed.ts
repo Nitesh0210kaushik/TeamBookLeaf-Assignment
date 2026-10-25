@@ -389,6 +389,25 @@ async function seed() {
         meta: { source: "rules" },
         createdAt,
       },
+      ...conversation.map(([role, hours]) => ({
+        ticket: ticket._id,
+        actor:
+          role === "admin" ? (assignee?._id ?? admins[0]._id) : authorUserIds.get(demo.authorCode),
+        type: role === "admin" ? "admin_replied" : "author_replied",
+        createdAt: hoursAgo(hours),
+      })),
+      ...(demo.status === "resolved" || demo.status === "closed"
+        ? [
+            {
+              ticket: ticket._id,
+              actor: assignee?._id ?? admins[0]._id,
+              type: "status_changed",
+              from: "in_progress",
+              to: demo.status,
+              createdAt: lastActivity,
+            },
+          ]
+        : []),
     ]);
   }
 

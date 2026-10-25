@@ -88,14 +88,15 @@ export class TicketService {
       filter.author = user.authorId;
     } else {
       if (query.authorId) filter.author = query.authorId;
-      if (query.category) filter.category = { $in: query.category };
-      if (query.priority) filter.priority = { $in: query.priority };
+      // An empty list (e.g. `?category=`) means "no filter", not "match nothing".
+      if (query.category?.length) filter.category = { $in: query.category };
+      if (query.priority?.length) filter.priority = { $in: query.priority };
       if (query.assignee === "me") filter.assignee = user.id;
       else if (query.assignee === "unassigned") filter.assignee = null;
       else if (query.assignee) filter.assignee = query.assignee;
     }
 
-    if (query.status) filter.status = { $in: query.status };
+    if (query.status?.length) filter.status = { $in: query.status };
     if (query.from || query.to) {
       filter.createdAt = {
         ...(query.from ? { $gte: query.from } : {}),
