@@ -234,20 +234,23 @@ async function seed() {
   checkIntegrity(dataset);
   await connectDatabase();
 
-  await Promise.all(
-    [
-      UserModel,
-      AuthorModel,
-      BookModel,
-      TicketModel,
-      TicketMessageModel,
-      TicketNoteModel,
-      TicketEventModel,
-      AiDraftModel,
-      AiUsageLogModel,
-      CounterModel,
-    ].map((model) => (model as typeof UserModel).deleteMany({})),
-  );
+  const models = [
+    UserModel,
+    AuthorModel,
+    BookModel,
+    TicketModel,
+    TicketMessageModel,
+    TicketNoteModel,
+    TicketEventModel,
+    AiDraftModel,
+    AiUsageLogModel,
+    CounterModel,
+  ] as unknown as (typeof UserModel)[];
+
+  await Promise.all(models.map((model) => model.deleteMany({})));
+  // autoIndex is off in production, so the seed creates every schema index explicitly
+  // (unique emails/codes, the queue's sort index, ...).
+  await Promise.all(models.map((model) => model.syncIndexes()));
 
   const [authorHash, adminHash] = await Promise.all([
     bcrypt.hash(DEMO_AUTHOR_PASSWORD, 10),

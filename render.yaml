@@ -15,7 +15,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
-        value: 22
+        value: "22"
       - key: MONGODB_URI
         sync: false # MongoDB Atlas connection string
       - key: JWT_SECRET
