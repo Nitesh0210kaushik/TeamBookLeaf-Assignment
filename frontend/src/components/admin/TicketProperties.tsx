@@ -15,7 +15,7 @@ import {
   STATUS_LABELS,
 } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
-import { formatDateTime } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
 import { useGetTeamQuery } from "@/store/api/adminApi";
 import { useMeQuery } from "@/store/api/authApi";
 import { useRerunTriageMutation, useUpdateTicketMutation } from "@/store/api/ticketsApi";
@@ -133,8 +133,10 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
           {triage.status === "fallback" && triage.fallbackReason && triage.fallbackReason !== "seed" && (
             <p className="mt-1 text-xs text-amber-800">{AI_FALLBACK_REASONS[triage.fallbackReason] ?? triage.fallbackReason}</p>
           )}
-          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted">
-            <span>{triage.model ? `${triage.model} · ` : ""}{formatDateTime(triage.completedAt)}</span>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] text-muted">
+            <span className="min-w-0 truncate" title={triage.model ? `Classified by ${triage.model}` : undefined}>
+              Updated {timeAgo(triage.completedAt)}
+            </span>
             <button
               type="button"
               disabled={triaging}
@@ -144,7 +146,7 @@ export function TicketProperties({ ticket }: { ticket: AdminTicketDetail }) {
                   .then(() => toast.success("Classification refreshed"))
                   .catch((error) => toast.error(getErrorMessage(error)))
               }
-              className="inline-flex items-center gap-1 font-medium text-violet-700 hover:underline disabled:opacity-50"
+              className="inline-flex shrink-0 items-center gap-1 font-medium whitespace-nowrap text-violet-700 hover:underline disabled:opacity-50"
             >
               <RefreshCw className={triaging ? "size-3 animate-spin" : "size-3"} /> Run AI triage
             </button>

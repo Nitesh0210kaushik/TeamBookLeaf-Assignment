@@ -88,13 +88,14 @@ export function AdminTicketPage() {
 
           {/* Remount per ticket so editor state never leaks between tickets. */}
           <ReplyComposer key={ticket.id} ticket={ticket} />
+          <InternalNotes ticket={ticket} />
+          <ActivityTimeline events={ticket.events} />
         </div>
 
+        {/* Decisions and context sit beside the conversation; on phones they follow it. */}
         <aside className="space-y-6">
           <TicketProperties ticket={ticket} />
           <AuthorContext ticket={ticket} />
-          <InternalNotes ticket={ticket} />
-          <ActivityTimeline events={ticket.events} />
         </aside>
       </div>
     </>

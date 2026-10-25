@@ -104,7 +104,10 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
           ) : draft ? (
             <div className="flex flex-wrap items-center gap-2">
               {draft.source === "ai" ? (
-                <Badge tone="violet" icon={<Bot className="size-3" />}>AI draft · {draft.model}</Badge>
+                // Model name stays in the tooltip — useful for debugging, noise for the ops team.
+                <span title={draft.model ? `Drafted by ${draft.model}` : undefined}>
+                  <Badge tone="violet" icon={<Bot className="size-3" />}>AI draft</Badge>
+                </span>
               ) : (
                 <Badge tone="amber" icon={<FileText className="size-3" />}>
                   Policy template · {AI_FALLBACK_REASONS[draft.fallbackReason ?? ""] ?? "AI unavailable"}
@@ -112,7 +115,7 @@ export function ReplyComposer({ ticket }: { ticket: AdminTicketDetail }) {
               )}
               {draft.knowledgeSections.length > 0 && (
                 <span className="text-muted">
-                  Grounded in: {draft.knowledgeSections.map((key) => KB_SECTION_LABELS[key] ?? key).join(", ")}
+                  Based on: {draft.knowledgeSections.map((key) => KB_SECTION_LABELS[key] ?? key).join(", ")}
                 </span>
               )}
               <span className="ml-auto text-muted">Review and edit before sending.</span>
