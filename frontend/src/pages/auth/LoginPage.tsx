@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Bot, Clock3, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -23,6 +24,7 @@ export function LoginPage() {
   const location = useLocation();
   const { data: currentUser } = useMeQuery();
   const [login, { isLoading, error }] = useLoginMutation();
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -34,7 +36,9 @@ export function LoginPage() {
   }
 
   const onSubmit = async (values: FormValues) => {
-    const user = await login(values).unwrap().catch(() => null);
+    const user = await login(values)
+      .unwrap()
+      .catch(() => null);
     if (!user) return;
     const from = (location.state as { from?: string } | null)?.from;
     // Only return to the page they came from if it belongs to their portal.
@@ -51,47 +55,67 @@ export function LoginPage() {
             Answers for authors, without the wait.
           </h1>
           <p className="mt-4 text-brand-100">
-            Track your books and royalties, raise a query in a minute, and hear back from the BookLeaf team in one place.
+            Track your books and royalties, and reach the BookLeaf team in one place.
           </p>
-          <ul className="mt-10 space-y-4 text-sm text-brand-50">
-            <li className="flex gap-3"><Clock3 className="size-5 shrink-0 text-leaf-500" />Live updates the moment our team replies</li>
-            <li className="flex gap-3"><Bot className="size-5 shrink-0 text-leaf-500" />AI-assisted triage so urgent issues are seen first</li>
-            <li className="flex gap-3"><ShieldCheck className="size-5 shrink-0 text-leaf-500" />Your data is visible only to you and the BookLeaf team</li>
-          </ul>
         </div>
         <div className="pointer-events-none absolute -top-24 -right-24 size-80 rounded-full bg-brand-600/40 blur-3xl" />
       </aside>
 
       <section className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden"><Logo subtitle="Publishing" /></div>
+          <div className="lg:hidden">
+            <Logo subtitle="Publishing" />
+          </div>
           <h2 className="mt-8 font-serif text-2xl font-semibold lg:mt-0">Sign in</h2>
-          <p className="mt-1 text-sm text-muted">Authors and BookLeaf team members use the same login.</p>
+          <p className="mt-1 text-sm text-muted">Use your BookLeaf account email and password.</p>
 
           <form className="mt-8 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
             <Field label="Email" htmlFor="email" error={errors.email?.message}>
-              <Input id="email" type="email" autoComplete="email" aria-invalid={!!errors.email} {...register("email")} />
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="name@example.com"
+                aria-invalid={!!errors.email}
+                {...register("email")}
+              />
             </Field>
             <Field label="Password" htmlFor="password" error={errors.password?.message}>
-              <Input id="password" type="password" autoComplete="current-password" aria-invalid={!!errors.password} {...register("password")} />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  aria-invalid={!!errors.password}
+                  className="pr-10"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-muted transition hover:text-ink focus-visible:ring-3 focus-visible:ring-brand-200 focus-visible:outline-none"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
             </Field>
             {error && (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
                 {getErrorMessage(error)}
               </p>
             )}
-            <Button type="submit" className="w-full" loading={isLoading} icon={!isLoading && <ArrowRight className="size-4" />}>
+            <Button
+              type="submit"
+              className="w-full"
+              loading={isLoading}
+              icon={!isLoading && <ArrowRight className="size-4" />}
+            >
               Sign in
             </Button>
           </form>
-
-          <div className="mt-8 border-t border-line pt-6 text-center text-xs leading-relaxed text-muted">
-            <p>
-              New to BookLeaf? Your author account is created by our team when you start publishing with us —
-              sign in with the email you registered with.
-            </p>
-            <p className="mt-2">Trouble signing in? Contact the BookLeaf author support team.</p>
-          </div>
         </div>
       </section>
     </div>
