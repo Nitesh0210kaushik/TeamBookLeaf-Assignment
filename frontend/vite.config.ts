@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
       alias: { "@": path.resolve(import.meta.dirname, "src") },
     },
     server: {
-      port: Number(env.DEV_SERVER_PORT) || 5171,
+      port: Number(env.DEV_SERVER_PORT) || 5173,
       // Fail loudly instead of silently moving to another port (the backend CORS list expects this one).
       strictPort: true,
       // Same-origin in development: the session cookie and SSE stream just work, no CORS.
@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     preview: {
-      port: Number(env.DEV_SERVER_PORT) || 5171,
+      port: Number(env.DEV_SERVER_PORT) || 5173,
       strictPort: true,
     },
   };
