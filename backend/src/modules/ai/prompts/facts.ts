@@ -30,7 +30,8 @@ export function escapeTags(text: string) {
 }
 
 export function formatBookFacts(book: BookFacts) {
-  const lines = [`"${book.title}" (${book.bookCode}) — status: ${book.status}`];
+  // Internal ids (e.g. BK014) are left out so they never leak into author-facing replies.
+  const lines = [`"${book.title}" — status: ${book.status}`];
 
   if (book.isPublished) {
     lines.push(
