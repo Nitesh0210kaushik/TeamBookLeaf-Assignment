@@ -142,8 +142,11 @@ npm run dev                   # http://localhost:5000/api/v1  (Swagger: /api/v1/
 # 2. Frontend (new terminal)
 cd frontend
 npm install
-npm run dev                   # http://localhost:5173  (proxies /api to :5000)
+cp .env.example .env          # dev port (5171) and API proxy target; no secrets
+npm run dev                   # http://localhost:5171  (proxies /api to :5000)
 ```
+
+The frontend runs on port **5171** (`DEV_SERVER_PORT` in `frontend/.env`, with `strictPort`). If you change it, update `FRONTEND_URL` in `backend/.env` too, because it is the backend's allowed CORS origin.
 
 Generate a JWT secret with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
 
