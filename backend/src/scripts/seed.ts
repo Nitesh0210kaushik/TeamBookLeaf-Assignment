@@ -343,7 +343,8 @@ async function seed() {
         suggestedCategory: rules.category,
         suggestedPriority: rules.priority,
         confidence: rules.confidence,
-        reasoning: `Seed data, classified by the rule-based classifier. Use "Re-run AI triage" to classify with AI.`,
+        reasoning:
+          "Classified automatically from keywords in the ticket. Run AI triage for an AI assessment.",
         fallbackReason: "seed",
         completedAt: createdAt,
       },

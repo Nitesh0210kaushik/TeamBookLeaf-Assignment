@@ -8,10 +8,12 @@ function limiter(options: {
   limit: number;
   message: string;
   keyByUser?: boolean;
+  skipSuccessfulRequests?: boolean;
 }) {
   return rateLimit({
     windowMs: options.windowMs,
     limit: options.limit,
+    skipSuccessfulRequests: options.skipSuccessfulRequests ?? false,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     // Per-user limits for authenticated, expensive endpoints; per-IP otherwise.
@@ -30,10 +32,15 @@ export const apiRateLimiter = limiter({
   message: "Too many requests. Please slow down.",
 });
 
+/**
+ * Brute-force protection: only failed logins count, so people switching between accounts
+ * (or a team behind one office IP) are never locked out by successful sign-ins.
+ */
 export const loginRateLimiter = limiter({
   windowMs: 15 * 60_000,
-  limit: 20,
-  message: "Too many login attempts. Please try again in a few minutes.",
+  limit: 10,
+  message: "Too many failed login attempts. Please try again in a few minutes.",
+  skipSuccessfulRequests: true,
 });
 
 /** Caps AI spend per admin: draft regeneration / re-triage are the only user-triggered LLM calls. */

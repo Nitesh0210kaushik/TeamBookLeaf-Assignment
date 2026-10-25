@@ -158,8 +158,8 @@ export function classifyWithRules(input: Pick<TriageInput, "subject" | "descript
     confidence: score === 0 ? 0.3 : Math.min(0.85, 0.45 + score * 0.1),
     reasoning:
       score === 0
-        ? "Rule-based fallback: no strong keywords found, defaulted to General Inquiry."
-        : "Rule-based fallback: classified from keyword signals in the ticket text.",
+        ? "No clear topic keywords found — set to General Inquiry for review."
+        : "Classified automatically from keywords in the ticket text.",
   };
 }
 
