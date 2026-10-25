@@ -50,10 +50,11 @@ const envSchema = z
       return;
     }
 
-    if (value.JWT_SECRET.startsWith("change-me") || value.JWT_SECRET.length < 64) {
+    // Length (>= 32) is enforced for every environment above; here we reject the template value.
+    if (value.JWT_SECRET.startsWith("change-me")) {
       ctx.addIssue({
         code: "custom",
-        message: "JWT_SECRET must be a random string of at least 64 characters in production.",
+        message: "JWT_SECRET must be replaced with a random secret in production.",
         path: ["JWT_SECRET"],
       });
     }

@@ -1,0 +1,32 @@
+# Render Blueprint — one web service that builds the frontend and serves it from the API
+# (same origin: no CORS, the session cookie and the SSE stream work without proxies).
+# Secrets marked `sync: false` are entered in the Render dashboard, never committed.
+services:
+  - type: web
+    name: bookleaf-support
+    runtime: node
+    plan: free
+    buildCommand: >-
+      cd frontend && npm ci --include=dev && npm run build &&
+      cd ../backend && npm ci --include=dev && npm run build
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22
+      - key: MONGODB_URI
+        sync: false # MongoDB Atlas connection string
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: FRONTEND_URL
+        sync: false # e.g. https://bookleaf-support.onrender.com
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_TRIAGE_MODEL
+        value: claude-opus-5-5
+      - key: AI_DRAFT_MODEL
+        value: claude-opus-5-5
