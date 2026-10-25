@@ -1,6 +1,5 @@
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { Types } from "mongoose";
-import { AI_CONFIG, supportsServerFallback } from "../config/ai.config";
+import { AI_CONFIG } from "../config/ai.config";
 import { applyPolicyGuardrails } from "../fallback/policy-guardrails";
 import { classifyWithRules } from "../fallback/rule-classifier";
 import {
@@ -10,9 +9,17 @@ import {
   type TriageModelOutput,
 } from "../prompts/triage.prompt";
 import type { TriageInput, TriageResult } from "../types/ai.types";
-import { AiOutputError, aiClient, toUsage } from "./ai-client.service";
+import { aiClient } from "./ai-client.service";
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+
+/** Capitalised and ending in punctuation, so guardrail notes can be appended cleanly. */
+function asSentence(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+  const capitalised = trimmed[0].toUpperCase() + trimmed.slice(1);
+  return /[.!?]$/.test(capitalised) ? capitalised : `${capitalised}.`;
+}
 
 export class AiTriageService {
   /**
@@ -28,40 +35,20 @@ export class AiTriageService {
     const outcome = await aiClient.execute<TriageModelOutput>(
       "triage",
       { ticketId, model, deadlineMs: timeoutMs },
-      async (client, requestOptions) => {
-        const message = await client.beta.messages.parse(
+      (provider, requestOptions) =>
+        provider.generateStructured(
           {
             model,
-            max_tokens: maxTokens,
-            // The system prompt is identical for every ticket, so it is marked cacheable.
-            system: [
-              { type: "text", text: TRIAGE_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-            ],
-            messages: [{ role: "user", content: buildTriageUserMessage(input) }],
-            output_config: { effort, format: betaZodOutputFormat(triageOutputSchema) },
-            ...(supportsServerFallback(model)
-              ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
-              : {}),
+            maxTokens,
+            effort,
+            // Identical for every ticket, so providers can cache it.
+            system: TRIAGE_SYSTEM_PROMPT,
+            user: buildTriageUserMessage(input),
+            schema: triageOutputSchema,
+            schemaName: "ticket_triage",
           },
           requestOptions,
-        );
-
-        if (message.stop_reason === "refusal") {
-          throw new AiOutputError("refusal", "Model declined to classify the ticket.");
-        }
-        if (!message.parsed_output) {
-          throw new AiOutputError(
-            "invalid_output",
-            `Unparseable triage output (stop: ${message.stop_reason}).`,
-          );
-        }
-
-        return {
-          value: message.parsed_output,
-          model: message.model,
-          usage: toUsage(message.usage),
-        };
-      },
+        ),
     );
 
     const base = outcome.ok
@@ -69,7 +56,7 @@ export class AiTriageService {
           category: outcome.value.category,
           priority: outcome.value.priority,
           confidence: clamp01(outcome.value.confidence),
-          reasoning: outcome.value.reasoning.trim(),
+          reasoning: asSentence(outcome.value.reasoning),
           source: "ai" as const,
           model: outcome.model,
           fallbackReason: null,

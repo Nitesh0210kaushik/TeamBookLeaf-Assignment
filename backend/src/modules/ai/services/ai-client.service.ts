@@ -1,25 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { Types } from "mongoose";
-import { env } from "../../../config/env";
 import { logger } from "../../../config/logger";
 import { AI_CONFIG } from "../config/ai.config";
+import { AiOutputError } from "../errors";
+import { AnthropicProvider } from "../providers/anthropic.provider";
+import { GroqProvider } from "../providers/groq.provider";
+import type { LlmProvider, LlmRequestOptions, LlmResult } from "../providers/llm-provider";
 import { aiUsageRepository } from "../repositories/ai-usage.repository";
 import type { AiCallResult, AiFailureReason, AiOperation, AiUsage } from "../types/ai.types";
 
-/** Thrown by executors when the model answered but the answer is unusable. */
-export class AiOutputError extends Error {
-  constructor(
-    public readonly reason: Extract<AiFailureReason, "refusal" | "invalid_output">,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-type ExecutorResult<T> = { value: T; model: string; usage: AiUsage };
-/** Passed straight to the SDK call: per-attempt timeout + an abort signal for the overall deadline. */
-export type AiRequestOptions = { timeout: number; signal: AbortSignal };
-type Executor<T> = (client: Anthropic, options: AiRequestOptions) => Promise<ExecutorResult<T>>;
+type Executor<T> = (provider: LlmProvider, options: LlmRequestOptions) => Promise<LlmResult<T>>;
 
 /** Failures that say "the provider is unhealthy" — these count towards opening the circuit. */
 const CIRCUIT_FAILURES = new Set<AiFailureReason>([
@@ -40,31 +29,13 @@ const FAILURE_MESSAGES: Record<AiFailureReason, string> = {
   invalid_output: "The AI response could not be used.",
 };
 
-export function toUsage(usage: {
-  input_tokens: number;
-  output_tokens: number;
-  cache_read_input_tokens?: number | null;
-  cache_creation_input_tokens?: number | null;
-}): AiUsage {
-  return {
-    inputTokens: usage.input_tokens,
-    outputTokens: usage.output_tokens,
-    cacheReadTokens: usage.cache_read_input_tokens ?? 0,
-    cacheWriteTokens: usage.cache_creation_input_tokens ?? 0,
-  };
-}
-
-function classifyError(error: unknown): AiFailureReason {
-  if (error instanceof AiOutputError) return error.reason;
-  // Order matters: specific subclasses before their parents.
-  if (error instanceof Anthropic.APIUserAbortError) return "timeout"; // overall deadline hit
-  if (error instanceof Anthropic.APIConnectionTimeoutError) return "timeout";
-  if (error instanceof Anthropic.APIConnectionError) return "provider_error";
-  if (error instanceof Anthropic.RateLimitError) return "rate_limited";
-  if (error instanceof Anthropic.AuthenticationError) return "auth_error";
-  if (error instanceof Anthropic.PermissionDeniedError) return "auth_error";
-  if (error instanceof Anthropic.APIError) return "provider_error";
-  return "invalid_output";
+function createProvider(): LlmProvider | null {
+  if (!AI_CONFIG.apiKey) {
+    return null;
+  }
+  return AI_CONFIG.provider === "groq"
+    ? new GroqProvider(AI_CONFIG.apiKey, AI_CONFIG.maxRetries)
+    : new AnthropicProvider(AI_CONFIG.apiKey, AI_CONFIG.maxRetries);
 }
 
 /**
@@ -75,16 +46,13 @@ function classifyError(error: unknown): AiFailureReason {
  * The API key is read from the environment only and never leaves the server.
  */
 export class AiClientService {
-  private readonly client: Anthropic | null;
   private consecutiveFailures = 0;
   private circuitOpenUntil = 0;
 
-  constructor(apiKey: string | undefined) {
-    this.client = apiKey ? new Anthropic({ apiKey, maxRetries: AI_CONFIG.maxRetries }) : null;
-  }
+  constructor(private readonly provider: LlmProvider | null) {}
 
   get isEnabled() {
-    return this.client !== null;
+    return this.provider !== null;
   }
 
   getStatus() {
@@ -92,6 +60,7 @@ export class AiClientService {
     return {
       enabled: this.isEnabled,
       available: this.isEnabled && !circuitOpen,
+      provider: AI_CONFIG.provider,
       circuitOpen,
       circuitOpenUntil: circuitOpen ? new Date(this.circuitOpenUntil).toISOString() : null,
       triageModel: AI_CONFIG.triage.model,
@@ -104,7 +73,7 @@ export class AiClientService {
     context: { ticketId: string | Types.ObjectId | null; model: string; deadlineMs: number },
     executor: Executor<T>,
   ): Promise<AiCallResult<T>> {
-    if (!this.client) {
+    if (!this.provider) {
       return { ok: false, reason: "disabled", message: FAILURE_MESSAGES.disabled };
     }
 
@@ -116,7 +85,7 @@ export class AiClientService {
     try {
       // SDK retries multiply the per-attempt timeout; the abort signal caps the total wait,
       // so an admin never waits longer than the deadline before falling back.
-      const result = await executor(this.client, {
+      const result = await executor(this.provider, {
         timeout: context.deadlineMs,
         signal: AbortSignal.timeout(context.deadlineMs),
       });
@@ -129,7 +98,10 @@ export class AiClientService {
       });
       return { ok: true, ...result };
     } catch (error) {
-      const reason = classifyError(error);
+      const reason =
+        error instanceof AiOutputError
+          ? error.reason
+          : (this.provider.classifyError(error) ?? "invalid_output");
       this.registerFailure(reason);
       logger.warn({ err: error, operation, reason, ticketId: context.ticketId }, "AI call failed");
       this.recordUsage(operation, context, {
@@ -176,4 +148,4 @@ export class AiClientService {
   }
 }
 
-export const aiClient = new AiClientService(env.ANTHROPIC_API_KEY);
+export const aiClient = new AiClientService(createProvider());

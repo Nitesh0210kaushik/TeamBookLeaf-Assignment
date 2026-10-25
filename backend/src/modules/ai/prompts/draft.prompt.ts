@@ -8,7 +8,7 @@ import {
   type KnowledgeSectionKey,
 } from "../knowledge-base/knowledge-base";
 import type { DraftInput } from "../types/ai.types";
-import { escapeTags, formatBookFacts, formatRoyaltyFacts, truncate } from "./facts";
+import { escapeTags, formatBookFacts, formatDate, formatRoyaltyFacts, truncate } from "./facts";
 
 const WRITING_RULES = `## How to write the reply
 - Address the author by first name. Open by acknowledging their specific concern in one or two sentences before any explanation.
@@ -18,8 +18,10 @@ const WRITING_RULES = `## How to write the reply
 - If the issue needs escalation or investigation, commit to a concrete timeline from the policies (for example "within 48 hours").
 - If a delay is on the author's side (for example a pending cover approval), frame it collaboratively, never as blame.
 - Only promise what the policies allow. Do not offer refunds, compensation or exceptions that the policies don't mention.
+- Use only the timelines stated in the policies (for example 48 hours, 24–48 hours, 5–7 business days, 3–5 business days). Do not invent other turnaround times.
+- The author is reading this on their support ticket. When you need something from them (photos, screenshots, details), ask them to reply on this ticket — they can attach files here. Never mention email addresses, phone numbers, links or other contact channels.
 - End with a clear next step for the author and/or the BookLeaf team.
-- Plain text only — no markdown headings, bold or tables. Short paragraphs; a short list only for steps. Usually 120–220 words.
+- Plain text only — no markdown: no asterisks or underscores for emphasis, no headings, bold or tables. Write book titles in plain double quotes. Short paragraphs; a short numbered list only for steps. Usually 120–220 words.
 - Sign off exactly as:
 Warm regards,
 BookLeaf Author Support
@@ -80,8 +82,8 @@ export function buildDraftUserMessage(input: DraftInput) {
     input.category === "royalty_payments" || input.category === "general_inquiry";
 
   const facts = [
-    `Author: ${input.author.name} (first name: ${input.author.firstName}); BookLeaf author since ${input.author.joinedDate ?? "unknown"}`,
-    `Today's date: ${input.today}`,
+    `Author: ${input.author.name} (first name: ${input.author.firstName}); BookLeaf author since ${formatDate(input.author.joinedDate)}`,
+    `Today's date: ${formatDate(input.today)}`,
     `Ticket #${input.ticketNumber} — subject: "${escapeTags(input.subject)}"; category: ${CATEGORY_LABELS[input.category]}; status: ${input.status}`,
     input.book
       ? `Book in question: ${formatBookFacts(input.book)}`

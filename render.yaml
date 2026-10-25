@@ -24,9 +24,11 @@ services:
         value: "true"
       - key: FRONTEND_URL
         sync: false # e.g. https://bookleaf-support.onrender.com
-      - key: ANTHROPIC_API_KEY
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
         sync: false
       - key: AI_TRIAGE_MODEL
-        value: claude-opus-5-5
+        value: openai/gpt-oss-20b
       - key: AI_DRAFT_MODEL
-        value: claude-opus-5-5
+        value: openai/gpt-oss-120b

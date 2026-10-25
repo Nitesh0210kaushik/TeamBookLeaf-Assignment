@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { z } from "zod";
+import { AI_PROVIDERS } from "../constants/ai";
 
 dotenv.config({ quiet: true });
 
@@ -35,9 +36,12 @@ const envSchema = z
     COOKIE_SECURE: booleanString,
 
     // AI is optional by design: without a key the app runs in rule-based fallback mode.
+    AI_PROVIDER: z.enum(AI_PROVIDERS).default("anthropic"),
     ANTHROPIC_API_KEY: z.string().optional(),
-    AI_TRIAGE_MODEL: z.string().min(1).default("claude-opus-5-5"),
-    AI_DRAFT_MODEL: z.string().min(1).default("claude-opus-5-5"),
+    GROQ_API_KEY: z.string().optional(),
+    // Optional overrides; each provider has sensible defaults (see modules/ai/config).
+    AI_TRIAGE_MODEL: z.string().optional(),
+    AI_DRAFT_MODEL: z.string().optional(),
     AI_TRIAGE_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
     AI_DRAFT_TIMEOUT_MS: z.coerce.number().int().positive().default(45_000),
     AI_CIRCUIT_FAILURE_THRESHOLD: z.coerce.number().int().positive().default(3),
@@ -81,6 +85,9 @@ if (!parsedEnv.success) {
 export const env = {
   ...parsedEnv.data,
   ANTHROPIC_API_KEY: parsedEnv.data.ANTHROPIC_API_KEY?.trim() || undefined,
+  GROQ_API_KEY: parsedEnv.data.GROQ_API_KEY?.trim() || undefined,
+  AI_TRIAGE_MODEL: parsedEnv.data.AI_TRIAGE_MODEL?.trim() || undefined,
+  AI_DRAFT_MODEL: parsedEnv.data.AI_DRAFT_MODEL?.trim() || undefined,
   COOKIE_SECURE: parsedEnv.data.COOKIE_SECURE ?? parsedEnv.data.NODE_ENV === "production",
 };
 

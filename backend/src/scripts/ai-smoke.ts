@@ -75,6 +75,8 @@ async function main() {
   );
   console.log("AI status after run:", aiClient.getStatus());
 
+  // Usage logs are written fire-and-forget; give them a moment before closing the connection.
+  await new Promise((resolve) => setTimeout(resolve, 1_000));
   await disconnectDatabase();
 }
 

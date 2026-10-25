@@ -1,5 +1,5 @@
 import type { TicketCategory } from "../../../constants/ticket";
-import { formatInr } from "../prompts/facts";
+import { formatDate, formatInr } from "../prompts/facts";
 import type { DraftInput } from "../types/ai.types";
 
 const SIGN_OFF = "Warm regards,\nBookLeaf Author Support";
@@ -16,7 +16,7 @@ const TEMPLATES: Record<TicketCategory, (input: DraftInput, bookTitle: string) =
       : `Your pending royalty is currently ${formatInr(royalty.totalRoyaltyPending)}. Payouts are made once the balance reaches ${formatInr(royalty.payoutThresholdInr)}; until then it rolls over to the next quarter, so nothing is lost.`;
     const reviewLine = royalty.payoutNeedsReview
       ? "Since it has been longer than a full payout cycle, I have escalated this to our finance team and we will get back to you within 48 hours."
-      : `The next payout run covers earnings for ${royalty.nextPayoutQuarter} and will be made by ${royalty.nextPayoutBy}.`;
+      : `The next payout run covers earnings for ${royalty.nextPayoutQuarter} and will be made by ${formatDate(royalty.nextPayoutBy)}.`;
 
     return `I completely understand your concern about the royalties for ${bookTitle}, and I want to make sure you have a clear picture.
 

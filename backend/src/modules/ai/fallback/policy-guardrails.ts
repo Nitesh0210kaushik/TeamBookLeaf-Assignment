@@ -3,7 +3,12 @@ import type { TriageInput } from "../types/ai.types";
 import { ISBN_ERROR_PATTERN, higherPriority } from "./rule-classifier";
 
 const PAYMENT_MISSING_PATTERN =
-  /(haven'?t|have not|never|not yet|didn'?t|did not) (been )?(received|got|paid)|\bno royalt|missing|overdue|late|delay|still waiting|where is my/i;
+  // Word boundaries matter: "late" must not match "calculated".
+  /(haven'?t|have not|never|not yet|didn'?t|did not) (been )?(received|got|paid)|\bno royalt|\bmissing\b|\boverdue\b|\blate\b|\bdelay(ed)?\b|still waiting|where is my|single rupee/i;
+
+/** "6 months", "over a year", "since publication" — the brief's example of a prolonged failure. */
+const LONG_WAIT_PATTERN =
+  /\b([6-9]|1[0-2]|six|seven|eight|nine|ten|eleven|twelve)\+?\s*months?\b|\b(over|more than|almost) a year\b|\b\d+\s*years?\b|since (my book was |it was )?publish/i;
 
 /**
  * Hard business rules applied on top of any classification (AI or rule-based).
@@ -35,6 +40,18 @@ export function applyPolicyGuardrails(
     const raised = higherPriority(priority, "high");
     if (raised !== priority)
       applied.push("Records show a payout overdue for review — raised to High.");
+    priority = raised;
+  }
+
+  // Brief: "I haven't received any royalty for 6 months" must outrank routine questions.
+  if (
+    classification.category === "royalty_payments" &&
+    PAYMENT_MISSING_PATTERN.test(text) &&
+    LONG_WAIT_PATTERN.test(text)
+  ) {
+    const raised = higherPriority(priority, "critical");
+    if (raised !== priority)
+      applied.push("No royalty received for 6+ months — raised to Critical.");
     priority = raised;
   }
 

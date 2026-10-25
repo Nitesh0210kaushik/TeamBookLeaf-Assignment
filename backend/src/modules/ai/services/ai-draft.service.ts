@@ -1,9 +1,10 @@
 import type { Types } from "mongoose";
-import { AI_CONFIG, supportsServerFallback } from "../config/ai.config";
+import { AI_CONFIG } from "../config/ai.config";
 import { buildTemplateDraft } from "../fallback/template-drafts";
 import { buildDraftSystemPrompt, buildDraftUserMessage } from "../prompts/draft.prompt";
 import type { DraftInput, DraftResult } from "../types/ai.types";
-import { AiOutputError, aiClient, toUsage } from "./ai-client.service";
+import { toPlainText } from "../utils/plain-text";
+import { aiClient } from "./ai-client.service";
 
 export class AiDraftService {
   /**
@@ -17,44 +18,23 @@ export class AiDraftService {
     const outcome = await aiClient.execute<string>(
       "draft",
       { ticketId, model, deadlineMs: timeoutMs },
-      async (client, requestOptions) => {
-        const message = await client.beta.messages.create(
+      (provider, requestOptions) =>
+        provider.generateText(
           {
             model,
-            max_tokens: maxTokens,
-            system: [{ type: "text", text: system.prompt, cache_control: { type: "ephemeral" } }],
-            messages: [{ role: "user", content: buildDraftUserMessage(input) }],
-            output_config: { effort },
-            ...(supportsServerFallback(model)
-              ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
-              : {}),
+            maxTokens,
+            effort,
+            // Same for every ticket in a category, so providers can cache it.
+            system: system.prompt,
+            user: buildDraftUserMessage(input),
           },
           requestOptions,
-        );
-
-        if (message.stop_reason === "refusal") {
-          throw new AiOutputError("refusal", "Model declined to draft a reply.");
-        }
-        if (message.stop_reason === "max_tokens") {
-          throw new AiOutputError("invalid_output", "Draft was cut off by the token limit.");
-        }
-
-        const text = message.content
-          .flatMap((block) => (block.type === "text" ? [block.text] : []))
-          .join("")
-          .trim();
-
-        if (!text) {
-          throw new AiOutputError("invalid_output", "Model returned an empty draft.");
-        }
-
-        return { value: text, model: message.model, usage: toUsage(message.usage) };
-      },
+        ),
     );
 
     if (outcome.ok) {
       return {
-        content: outcome.value,
+        content: toPlainText(outcome.value),
         source: "ai",
         model: outcome.model,
         knowledgeSections: system.sections,

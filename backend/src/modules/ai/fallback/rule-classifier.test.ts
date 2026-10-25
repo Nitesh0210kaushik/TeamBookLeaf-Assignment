@@ -85,6 +85,30 @@ describe("applyPolicyGuardrails", () => {
     assert.equal(r.applied.length, 1);
   });
 
+  it("raises a royalty missing for over a year to Critical, even if the model said High", () => {
+    const r = applyPolicyGuardrails(
+      { category: "royalty_payments", priority: "high" },
+      {
+        subject: "No royalty",
+        description: "I have not received a single rupee in royalty. It has been more than a year.",
+        royalty,
+      },
+    );
+    assert.equal(r.priority, "critical");
+  });
+
+  it("does not escalate a routine royalty question", () => {
+    const r = applyPolicyGuardrails(
+      { category: "royalty_payments", priority: "medium" },
+      {
+        subject: "Breakdown",
+        description: "Could I get a detailed breakdown of how my royalty is calculated?",
+        royalty: { ...royalty, payoutNeedsReview: true, meetsPayoutThreshold: true },
+      },
+    );
+    assert.equal(r.priority, "medium");
+  });
+
   it("never lowers priority", () => {
     const r = applyPolicyGuardrails(
       { category: "isbn_metadata", priority: "critical" },
